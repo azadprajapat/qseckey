@@ -1,5 +1,12 @@
 class PayloadGenerator:
     @staticmethod
+    def test_connection(source_type, source_host, event):
+        return {
+            "source_type": source_type,
+            "source_host": source_host,
+            "event": event
+        }
+    @staticmethod
     def protocol_begin(source_type, source_host, key_size, connection_id, event, key_id):
         return {
             "source_type": source_type,

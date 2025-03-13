@@ -25,19 +25,18 @@ class KeyStorage:
         })
         print(f"Key {key_id} saved for connection {connection_id}")
 
-    def get_key(self, key_id=None, connection_id=None):
-        """Retrieves keys based on key_id or connection_id. Returns empty if nothing passed."""
+    def get_keys(self, key_id=None, connection_id=None):
+        """Retrieves keys based on key_id or connection_id. Returns an empty list if nothing is found."""
         if key_id:
             for entry in self._storage:
                 if entry["key_id"] == key_id:
-                    return entry
-            return None  # Key not found
+                    return [entry]  # Return a list instead of a single dictionary
+            return []  # Return an empty list if key_id is not found
 
         if connection_id is not None:
-            result = [entry for entry in self._storage if entry["connection_id"] == connection_id]
-            return result if result else None  # Return None if no matches
+            return [entry for entry in self._storage if entry["connection_id"] == connection_id]
 
-        return None  # Return None if no parameters are given
+        return []  # Return an empty list instead of None
 
     def remove_key(self, key_id=None, connection_id=None):
         """Removes keys by key_id or connection_id. Returns False if no parameters passed."""

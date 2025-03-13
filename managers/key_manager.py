@@ -29,6 +29,10 @@ class KeyManager:
         connection_data['available_keys_count'] = 0
         connection_data['connection_id'] = connection_id
         self.connection_storage.store_connection(connection_id, connection_data)
+        from managers.quantum_manager import QuantumManager
+        quantum_manager = QuantumManager()
+        # quantum_manager.test_connection(connection_data)
+
         print("Connection created and stored successfully.")
         return connection_data
 
@@ -60,8 +64,9 @@ class KeyManager:
 
     def retrieve_key_from_storage(self, key_id, connection_id):
         """Retrieves and removes a key from storage."""
-        key = self.key_storage.get_key(key_id, connection_id)
-        if key:
+        keys = self.key_storage.get_keys(key_id, connection_id)
+        if len(keys) > 0:
+            key = keys[0]
             print(f"Key retrieved for Connection ID {connection_id}, Key ID {key_id}: {key}")
             self.key_storage.remove_key(key_id=key["key_id"])
             if connection_id:
@@ -76,20 +81,22 @@ class KeyManager:
         if connection_id:
             self.update_key_count_connection(connection_id)
         print(f"Key stored for ID {key_id} with connection ID {connection_id}")
+        print(self.key_storage._storage)
 
     def process_connections(self):
         """Periodically processes active connections to generate keys."""
         while True:
-            from managers.quantum_manager import QuantumManager
+            from managers.quantum_manager import QuantumManager, QuantumManagerState
             connections = self.connection_storage.get_active_connections()
             print("KeyManager listening for active connections...")
             for connection in connections:
-                print(connection)
                 quantum_manager = QuantumManager()
-                quantum_manager.generate_key(connection)
+                if(quantum_manager.state == QuantumManagerState.IDLE):
+                    print(connection)
+                    quantum_manager.generate_key(connection)
             time.sleep(10)  # Run periodically every 10 seconds
 
     def update_key_count_connection(self, connection_id):
         """Updates the available_keys_count for a connection."""
-        keys = self.key_storage.get_key("", connection_id)
+        keys = self.key_storage.get_keys("", connection_id)
         return self.update_connection_data(connection_id, "available_keys_count", len(keys))

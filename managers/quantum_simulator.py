@@ -20,7 +20,10 @@ class SenderInstanceFactory:
     @staticmethod
     def get_or_create(key_id,connection_id, key_size, quantum_link_info, public_channel_info):
         if key_id not in SenderInstanceFactory._instances:
-            SenderInstanceFactory._instances[key_id] = Sender(key_id,connection_id, key_size, quantum_link_info, public_channel_info)
+            if(key_size == None):
+                print("Key size is not provided",key_id,connection_id)
+            print(key_size)
+            SenderInstanceFactory._instances[key_id] = Sender(key_id,connection_id, int(key_size), quantum_link_info, public_channel_info)
         return SenderInstanceFactory._instances[key_id]
 
 def get_public_channel():
@@ -62,22 +65,24 @@ class Sender:
         public_channel =get_public_channel();
         quantum_channel =get_quantum_channel();
         if self.state == QuantumProtocolStatus.STARTED:
-            public_channel.send(self.public_channel_info,PayloadGenerator.protocol_begin("SENDER",self.public_channel_info,self.key_size,self.connection_id,DataEvents.BEGIN,self.key_id))
-            self.state = QuantumProtocolStatus.INITIALIZED
-            self.run_protocol()
+            res = public_channel.send(self.public_channel_info['target'],PayloadGenerator.protocol_begin("SENDER",self.public_channel_info,self.key_size,self.connection_id,DataEvents.BEGIN,self.key_id))
+            if(res):
+                self.state = QuantumProtocolStatus.INITIALIZED
+                self.run_protocol()
         if self.state == QuantumProtocolStatus.INITIALIZED:
             quantum_circuit = self.prepare_qubits()
             rho = self.perform_tomography(quantum_circuit)
-            quantum_channel.send(self.quantum_link_info, PayloadGenerator.send_qubits("SENDER",self.quantum_link_info,self.key_id,DataEvents.QUBITS,rho))
-            self.state = QuantumProtocolStatus.SENDED_QUBIT
+            res = quantum_channel.send(self.quantum_link_info['target'], PayloadGenerator.send_qubits("SENDER",self.quantum_link_info,self.key_id,DataEvents.QUBITS,rho))
+            if(res):
+                self.state = QuantumProtocolStatus.SENDED_QUBIT
         if self.state == QuantumProtocolStatus.BASES_RECEIVED:
-            public_channel.send(self.public_channel_info, PayloadGenerator.send_bases("SENDER",self.key_id,DataEvents.BASES,self.primary_bases))
-
-            final_key = [self.bits[i] for i in range(self.key_size) if self.primary_bases[i] == self.secondary_bases[i]]
-            from managers.quantum_manager import QuantumManager
-            quantum_manager = QuantumManager()  
-            quantum_manager.store_key(self.key_id,final_key,self.connection_id)
-            self.state = QuantumProtocolStatus.COMPLETED
+            res = public_channel.send(self.public_channel_info['target'], PayloadGenerator.send_bases("SENDER",self.key_id,DataEvents.BASES,self.primary_bases))
+            if(res):
+                final_key = [self.bits[i] for i in range(self.key_size) if self.primary_bases[i] == self.secondary_bases[i]]
+                from managers.quantum_manager import QuantumManager
+                quantum_manager = QuantumManager()  
+                quantum_manager.store_key(self.key_id,final_key,self.connection_id)
+                self.state = QuantumProtocolStatus.COMPLETED
     
     def perform_tomography(self, qc):
         rho = DensityMatrix.from_instruction(qc) 
@@ -96,7 +101,7 @@ class ReceiverInstanceFactory:
     @staticmethod
     def get_or_create(key_id,key_size, public_channel_info):
         if key_id not in ReceiverInstanceFactory._instances:
-            ReceiverInstanceFactory._instances[key_id] = Receiver(key_id,key_size, public_channel_info)
+            ReceiverInstanceFactory._instances[key_id] = Receiver(key_id,int(key_size), public_channel_info)
         return ReceiverInstanceFactory._instances[key_id]
     
 
@@ -134,8 +139,9 @@ class Receiver:
         public_channel =get_public_channel();
         if self.state == QuantumProtocolStatus.RECEIVED_QUBITS:
             self.key_data = self.measure_qubits(self.quantum_circuit,self.primary_bases)
-            public_channel.send(self.public_channel_info, PayloadGenerator.send_bases("RECEIVER", self.key_id,DataEvents.BASES,self.primary_bases))
-            self.state = QuantumProtocolStatus.BASES_SENT
+            res = public_channel.send(self.public_channel_info['source'], PayloadGenerator.send_bases("RECEIVER", self.key_id,DataEvents.BASES,self.primary_bases))
+            if(res):
+                self.state = QuantumProtocolStatus.BASES_SENT
         if self.state == QuantumProtocolStatus.BASES_RECEIVED:
             final_key = [self.key_data[i] for i in range(self.key_size) if self.primary_bases[i] == self.secondary_bases[i]]
             from managers.quantum_manager import QuantumManager

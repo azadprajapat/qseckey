@@ -2,6 +2,7 @@ import socket
 import pickle
 import struct  # Used for packing/unpacking message length
 import threading
+from utils.config import Settings
 from managers.quantum_simulator import SenderInstanceFactory, ReceiverInstanceFactory
 
 class PublicChannel:
@@ -17,15 +18,21 @@ class PublicChannel:
         return cls._instance
 
     @staticmethod
-    def send(connection_info, data):
+    def send(host, data):
         """Sends data over a classical public channel (TCP socket) using length-prefixed messages."""
-        host, port = connection_info['target'], 8081
+        host, port = host,  Settings.PUBLIC_LISTNER
         serialized_data = pickle.dumps(data)
         data_length = struct.pack("!I", len(serialized_data))  # Pack length as 4 bytes
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((host, port))
-            s.sendall(data_length + serialized_data)  # Send length + data
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                print("Sending data to host and port on public link:", host, port)
+                s.connect((host, port))
+                s.sendall(data_length + serialized_data)  # Send length + data
+            return True  # Success
+        except (socket.error, Exception) as e:
+            print("Error sending data:", e)
+            return False  # Failure
 
     @staticmethod
     def listen(port):
@@ -47,7 +54,11 @@ class PublicChannel:
                         conn, _ = s.accept()
                         with conn:
                             data = PublicChannel._receive_data(conn)  # Safe data reception
+                            print("Data received on public channel",data)
                             if data:
+                                if(data['event'] == 'TEST'):
+                                    print("Public Channel: Test event received")
+                                    return
                                 if data.get('source_type') == "RECEIVER":
                                     sender = SenderInstanceFactory.get_or_create(
                                         data.get('key_id'), "", "", "", ""
