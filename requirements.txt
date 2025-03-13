@@ -1,2 +1,8 @@
 fastapi
 uvicorn
+pydantic
+python-dotenv
+qiskit
+qiskit-aer
+numpy
+qiskit_experiments

@@ -10,7 +10,7 @@ class KeyStorage:
             cls._instance = super(KeyStorage, cls).__new__(cls)
         return cls._instance
 
-    def save_key(self, connection_id, key_id, key_data):
+    def save_key(self, key_id, key_data,connection_id):
         """Saves a key entry. If key_id exists, it updates the entry."""
         for entry in self._storage:
             if entry["key_id"] == key_id:
@@ -23,6 +23,7 @@ class KeyStorage:
             "key_id": key_id,
             "key_data": key_data
         })
+        print(f"Key {key_id} saved for connection {connection_id}")
 
     def get_key(self, key_id=None, connection_id=None):
         """Retrieves keys based on key_id or connection_id. Returns empty if nothing passed."""

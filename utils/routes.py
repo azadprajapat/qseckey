@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from managers.key_manager import KeyManager
+from channels.public_channel import PublicChannel
 from utils.config import settings;
 
 router = APIRouter()
@@ -27,7 +28,10 @@ def register_connection(connection_data: dict):
 
 @router.get("/get_key")
 def get_key(key_id: str = None, slave_host: str = None):
-    return {"key": "sample_key_data"}
+    if not key_id and not slave_host:
+        return {"error": "Missing required parameters: key_id, slave_host"}, 400    
+    key_response = key_manager.retrieve_key_from_storage(key_id, slave_host)
+    return key_response
 
 @router.post("/close_connection")
 def close_connection(connection_id: str):

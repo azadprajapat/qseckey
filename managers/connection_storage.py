@@ -23,8 +23,9 @@ class ConnectionStorage:
 
     def get_active_connections(self):
         """Returns all active connections that need more keys."""
+
         return [
-            conn_id for conn_id in self._storage.keys()
+            self._storage.get(conn_id) for conn_id in self._storage.keys()
             if self._storage[conn_id]['available_keys_count'] < self._storage[conn_id]['max_keys_count']
         ]
 

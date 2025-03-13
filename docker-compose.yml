@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  sender:
+    build: .
+    container_name: sender_app
+    environment:
+      - ROLE=SENDER
+    ports:
+      - "8000:8000"
+      - "8081:8081"
+      - "4081:4081"
+    networks:
+      - app_network
+
+  receiver:
+    build: .
+    container_name: receiver_app
+    environment:
+      - ROLE=RECEIVER
+    ports:
+      - "8001:8000"
+      - "8082:8081"
+      - "4082:4081"
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
