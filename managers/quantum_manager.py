@@ -70,6 +70,7 @@ class QuantumManager:
 
     def binary_array_to_base64(self,binary_array):
         # Convert binary array to bytes
+        return binary_array
         byte_data = bytes(int("".join(map(str, binary_array[i:i+8])), 2) for i in range(0, len(binary_array), 8))
     
         # Encode bytes to Base64

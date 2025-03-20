@@ -6,6 +6,7 @@ import uuid
 from enum import Enum,auto
 import threading
 from qiskit import QuantumCircuit,transpile
+from qiskit.qasm2 import dumps
 from qiskit_aer import Aer
 from qiskit_experiments.library import StateTomography
 from qiskit.quantum_info import DensityMatrix
@@ -35,7 +36,6 @@ def get_quantum_channel():
 class Sender:
     def __init__(self,key_id,connection_id, key_size,quantum_link_info, public_channel_info):
         self.connection_id =connection_id
-        self.aer_sim = Aer.get_backend('qasm_simulator')
         self.key_size = key_size
         self.key_id = key_id
         self.primary_bases = np.random.randint(2, size=key_size)
@@ -44,7 +44,6 @@ class Sender:
         self.state = QuantumProtocolStatus.STARTED
         self.quantum_link_info = quantum_link_info
         self.public_channel_info = public_channel_info
-        self.backend = Aer.get_backend('qasm_simulator')
 
 
 
@@ -52,7 +51,7 @@ class Sender:
 
     def prepare_qubits(self): 
         qc = QuantumCircuit(self.key_size, self.key_size)  # Create a circuit with 'key_size' qubits
-
+        print("starting the protocol with bits",self.bits)
         for i in range(self.key_size):
             if self.bits[i] == 1:
                 qc.x(i)  # Apply X (bit-flip) gate if the bit is 1
@@ -71,7 +70,7 @@ class Sender:
                 self.run_protocol()
         if self.state == QuantumProtocolStatus.INITIALIZED:
             quantum_circuit = self.prepare_qubits()
-            rho = self.perform_tomography(quantum_circuit)
+            rho = self.serialize_circuit(quantum_circuit)
             res = quantum_channel.send(self.quantum_link_info['target'], PayloadGenerator.send_qubits("SENDER",self.quantum_link_info,self.key_id,DataEvents.QUBITS,rho))
             if(res):
                 self.state = QuantumProtocolStatus.SENDED_QUBIT
@@ -79,14 +78,15 @@ class Sender:
             res = public_channel.send(self.public_channel_info['target'], PayloadGenerator.send_bases("SENDER",self.key_id,DataEvents.BASES,self.primary_bases))
             if(res):
                 final_key = [self.bits[i] for i in range(self.key_size) if self.primary_bases[i] == self.secondary_bases[i]]
+                final_key_str =''.join(map(str, final_key))
+                print("final key in Sender",final_key_str)
                 from managers.quantum_manager import QuantumManager
                 quantum_manager = QuantumManager()  
-                quantum_manager.store_key(self.key_id,final_key,self.connection_id)
+                quantum_manager.store_key(self.key_id,final_key_str,self.connection_id)
                 self.state = QuantumProtocolStatus.COMPLETED
     
-    def perform_tomography(self, qc):
-        rho = DensityMatrix.from_instruction(qc) 
-        return rho
+    def serialize_circuit(self, qc):
+        return dumps(qc)
     def listener(self,data):
         if data['event'] == DataEvents.BASES:
             self.secondary_bases = data['bases']
@@ -101,6 +101,7 @@ class ReceiverInstanceFactory:
     @staticmethod
     def get_or_create(key_id,key_size, public_channel_info):
         if key_id not in ReceiverInstanceFactory._instances:
+            print("Creating new ReceiverInstanceFactory as its a new connection")
             ReceiverInstanceFactory._instances[key_id] = Receiver(key_id,int(key_size), public_channel_info)
         return ReceiverInstanceFactory._instances[key_id]
     
@@ -126,12 +127,14 @@ class Receiver:
             if bases[i] == 1:
                 qc.h(i)  # Apply Hadamard before measuring in the X-bases
 
-        qc.measure_all()
+        qc.measure(range(num_qubits), range(num_qubits))
 
 
         t_circuit = transpile(qc.reverse_bits(), self.aer_sim)
-        counts = self.aer_sim.run(t_circuit, shots=1024).result().get_counts()
+        counts = self.aer_sim.run(t_circuit, shots=2048).result().get_counts()
         best_outcome = max(counts, key=counts.get)
+        best_outcome = np.array([int(bit) for bit in best_outcome],dtype=int)
+        print("measurement on the quantum simulator complted successfully",best_outcome)
 
         return best_outcome  # Return the most likely measurement outcome
 
@@ -144,9 +147,11 @@ class Receiver:
                 self.state = QuantumProtocolStatus.BASES_SENT
         if self.state == QuantumProtocolStatus.BASES_RECEIVED:
             final_key = [self.key_data[i] for i in range(self.key_size) if self.primary_bases[i] == self.secondary_bases[i]]
+            final_key_str =''.join(map(str, final_key))
+            print("final key in Receiver",final_key_str)
             from managers.quantum_manager import QuantumManager
             quantum_manager = QuantumManager()
-            quantum_manager.store_key(self.key_id,final_key)
+            quantum_manager.store_key(self.key_id,final_key_str)
             self.state = QuantumProtocolStatus.COMPLETED
 
     def listener(self,data):
@@ -163,13 +168,8 @@ class Receiver:
             self.run_protocol()
 
                 
-
-    def reconstruct_circuit(self, rho):
-        """ Reconstruct a quantum circuit from the given density matrix """
-        reconstructed_qc = QuantumCircuit(self.key_size)
-        dm = DensityMatrix(rho)  # Convert to Qiskit's DensityMatrix format
-        reconstructed_qc.initialize(dm.to_statevector(), list(range(self.key_size)))
-        return reconstructed_qc
+    def reconstruct_circuit(self, qasm_str):
+        return QuantumCircuit.from_qasm_str(qasm_str)
     
 
 
