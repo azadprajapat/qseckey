@@ -38,7 +38,7 @@ class Sender:
         self.connection_id =connection_id
         self.key_size = key_size
         self.key_id = key_id
-        self.primary_bases = np.random.randint(2, size=key_size)
+        self.primary_bases =  np.random.randint(2, size=self.key_size) 
         self.secondary_bases = None
         self.bits =  np.random.randint(2, size=self.key_size)
         self.state = QuantumProtocolStatus.STARTED
@@ -101,7 +101,7 @@ class ReceiverInstanceFactory:
     @staticmethod
     def get_or_create(key_id,key_size, public_channel_info):
         if key_id not in ReceiverInstanceFactory._instances:
-            print("Creating new ReceiverInstanceFactory as its a new connection")
+            print("Creating new ReceiverInstanceFactory as its a new connection with key_id",key_id)
             ReceiverInstanceFactory._instances[key_id] = Receiver(key_id,int(key_size), public_channel_info)
         return ReceiverInstanceFactory._instances[key_id]
     
@@ -114,7 +114,7 @@ class Receiver:
         self.quantum_circuit = None
         self.key_data = None
         self.state = QuantumProtocolStatus.STARTED
-        self.primary_bases = np.random.randint(2, size=key_size)
+        self.primary_bases =  np.random.randint(2, size=self.key_size)
         self.secondary_bases = None
         self.public_channel_info = public_channel_info
           
@@ -129,10 +129,18 @@ class Receiver:
 
         qc.measure(range(num_qubits), range(num_qubits))
 
+        print("Max qubits supported: ",self.aer_sim.configuration().n_qubits)
+        print("Qubits provided", num_qubits)
 
-        t_circuit = transpile(qc.reverse_bits(), self.aer_sim)
-        counts = self.aer_sim.run(t_circuit, shots=2048).result().get_counts()
+        transpiled_qc = transpile(qc.reverse_bits(), self.aer_sim)
+        counts = self.aer_sim.run(transpiled_qc, shots=2048).result().get_counts()
         best_outcome = max(counts, key=counts.get)
+        max_frequency = max(counts.values())
+
+
+        max_count = sum(1 for freq in counts.values() if freq == max_frequency)
+
+        print("Number of outcomes with maximum frequency: ",max_frequency," and count ", max_count)
         best_outcome = np.array([int(bit) for bit in best_outcome],dtype=int)
         print("measurement on the quantum simulator complted successfully",best_outcome)
 

@@ -86,14 +86,12 @@ class KeyManager:
     def process_connections(self):
         """Periodically processes active connections to generate keys."""
         while True:
-            from managers.quantum_manager import QuantumManager, QuantumManagerState
+            from managers.quantum_manager import QuantumManager
             connections = self.connection_storage.get_active_connections()
             print("KeyManager listening for active connections...")
             for connection in connections:
                 quantum_manager = QuantumManager()
-                if(quantum_manager.state == QuantumManagerState.IDLE):
-                    print(connection)
-                    quantum_manager.generate_key(connection)
+                quantum_manager.generate_key(connection)
             time.sleep(10)  # Run periodically every 10 seconds
 
     def update_key_count_connection(self, connection_id):
