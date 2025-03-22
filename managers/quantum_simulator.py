@@ -15,6 +15,24 @@ from qiskit.quantum_info import Statevector
 #from managers.quantum_manager import QuantumManager
 from utils.payload_generate import PayloadGenerator
 
+
+class QuantumProtocolStatus(Enum):
+    STARTED = auto()
+    SENDED_QUBIT = auto()
+    RECEIVING_QUBITS = auto()
+    BASES_RECEIVED = auto()
+    RECEIVED_QUBITS = auto()
+    BASES_SENT = auto()
+    COMPLETED = auto()
+    INITIALIZED = auto()
+
+class DataEvents(Enum):
+    BEGIN = auto()
+    BASES = auto()
+    QUBITS = auto()
+    ABORT = auto()
+
+
 class SenderInstanceFactory:
     _instances = {}
 
@@ -23,7 +41,6 @@ class SenderInstanceFactory:
         if key_id not in SenderInstanceFactory._instances:
             if(key_size == None):
                 print("Key size is not provided",key_id,connection_id)
-            print(key_size)
             SenderInstanceFactory._instances[key_id] = Sender(key_id,connection_id, int(key_size), quantum_link_info, public_channel_info)
         return SenderInstanceFactory._instances[key_id]
 
@@ -36,11 +53,12 @@ def get_quantum_channel():
 class Sender:
     def __init__(self,key_id,connection_id, key_size,quantum_link_info, public_channel_info):
         self.connection_id =connection_id
-        self.key_size = key_size*2
+        self.key_size = key_size
+        self.qubits_requested = key_size*2
         self.key_id = key_id
-        self.primary_bases =  np.random.randint(2, size=self.key_size) 
+        self.primary_bases =  np.random.randint(2, size=self.qubits_requested) 
         self.secondary_bases = None
-        self.bits =  np.random.randint(2, size=self.key_size)
+        self.bits =  np.random.randint(2, size=self.qubits_requested)
         self.state = QuantumProtocolStatus.STARTED
         self.quantum_link_info = quantum_link_info
         self.public_channel_info = public_channel_info
@@ -50,9 +68,9 @@ class Sender:
       
 
     def prepare_qubits(self): 
-        qc = QuantumCircuit(self.key_size, self.key_size)  # Create a circuit with 'key_size' qubits
+        qc = QuantumCircuit(self.qubits_requested, self.qubits_requested)  # Create a circuit with 'key_size' qubits
         print("starting the protocol with bits",self.bits)
-        for i in range(self.key_size):
+        for i in range(self.qubits_requested):
             if self.bits[i] == 1:
                 qc.x(i)  # Apply X (bit-flip) gate if the bit is 1
             if self.primary_bases[i] == 1:
@@ -77,7 +95,14 @@ class Sender:
         if self.state == QuantumProtocolStatus.BASES_RECEIVED:
             res = public_channel.send(self.public_channel_info['target'], PayloadGenerator.send_bases("SENDER",self.key_id,DataEvents.BASES,self.primary_bases))
             if(res):
-                final_key = [self.bits[i] for i in range(self.key_size) if self.primary_bases[i] == self.secondary_bases[i]]
+                final_key = [self.bits[i] for i in range(self.qubits_requested) if self.primary_bases[i] == self.secondary_bases[i]]
+                if len(final_key) < self.key_size:
+                    print(f"Final key size {len(final_key)} is less than required {self.key_size}. Discarding transaction.")
+                    self.state=QuantumProtocolStatus.COMPLETED
+                    return  # Discard transaction
+        
+
+                final_key = final_key[:self.key_size]
                 final_key_str =''.join(map(str, final_key))
                 print("final key in Sender",final_key_str)
                 from managers.quantum_manager import QuantumManager
@@ -108,13 +133,14 @@ class ReceiverInstanceFactory:
 
 class Receiver:
     def __init__(self, key_id, key_size, public_channel_info):
+        self.qubits_requested = key_size*2
         self.key_size = key_size
         self.aer_sim = Aer.get_backend('qasm_simulator')
         self.key_id = key_id
         self.quantum_circuit = None
         self.key_data = None
         self.state = QuantumProtocolStatus.STARTED
-        self.primary_bases =  np.random.randint(2, size=self.key_size)
+        self.primary_bases =  np.random.randint(2, size=self.qubits_requested)
         self.secondary_bases = None
         self.public_channel_info = public_channel_info
           
@@ -154,7 +180,14 @@ class Receiver:
             if(res):
                 self.state = QuantumProtocolStatus.BASES_SENT
         if self.state == QuantumProtocolStatus.BASES_RECEIVED:
-            final_key = [self.key_data[i] for i in range(self.key_size) if self.primary_bases[i] == self.secondary_bases[i]]
+            final_key = [self.key_data[i] for i in range(self.qubits_requested) if self.primary_bases[i] == self.secondary_bases[i]]
+            if len(final_key) < self.key_size:
+                print(f"Final key size {len(final_key)} is less than required {self.key_size}. Discarding transaction.")
+                self.state=QuantumProtocolStatus.COMPLETED
+                return  # Discard transaction
+        
+
+            final_key = final_key[:self.key_size]           
             final_key_str =''.join(map(str, final_key))
             print("final key in Receiver",final_key_str)
             from managers.quantum_manager import QuantumManager
@@ -181,18 +214,3 @@ class Receiver:
     
 
 
-class QuantumProtocolStatus(Enum):
-    STARTED = auto()
-    SENDED_QUBIT = auto()
-    RECEIVING_QUBITS = auto()
-    BASES_RECEIVED = auto()
-    RECEIVED_QUBITS = auto()
-    BASES_SENT = auto()
-    COMPLETED = auto()
-    INITIALIZED = auto()
-
-class DataEvents(Enum):
-    BEGIN = auto()
-    BASES = auto()
-    QUBITS = auto()
-    ABORT = auto()

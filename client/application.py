@@ -76,7 +76,7 @@ def request_key_from_server(key_id):
 # Client process
 slave_host = "jk3"
 register_connection(slave_host)
-time.sleep(2)  # Ensure the key is available in the second server
+time.sleep(5)  # Ensure the key is available in the second server
 secure_key_response = get_secure_key(slave_host)
 
 key_id = secure_key_response["key_id"]
