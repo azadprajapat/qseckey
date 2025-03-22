@@ -36,7 +36,7 @@ def get_quantum_channel():
 class Sender:
     def __init__(self,key_id,connection_id, key_size,quantum_link_info, public_channel_info):
         self.connection_id =connection_id
-        self.key_size = key_size
+        self.key_size = key_size*2
         self.key_id = key_id
         self.primary_bases =  np.random.randint(2, size=self.key_size) 
         self.secondary_bases = None
@@ -140,7 +140,7 @@ class Receiver:
 
         max_count = sum(1 for freq in counts.values() if freq == max_frequency)
 
-        print("Number of outcomes with maximum frequency: ",max_frequency," and count ", max_count)
+        print("Number of outcomes with maximum frequency: ",max_frequency," and count", max_count)
         best_outcome = np.array([int(bit) for bit in best_outcome],dtype=int)
         print("measurement on the quantum simulator complted successfully",best_outcome)
 

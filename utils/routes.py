@@ -15,8 +15,8 @@ def register_connection(connection_data: dict):
     missing_params = [param for param in required_params if param not in connection_data]
     if missing_params:
         return {"error": f"Missing required parameters: {', '.join(missing_params)}"}, 400
-
-    # Create connection
+    if(connection_data['key_size'] >settings.MAX_KEY_SIZE):
+        return {"error": f"Key size exceeds the maximum allowed size"}, 400
     try:
         connection_response = key_manager.create_connection(connection_data)
         return {

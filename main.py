@@ -16,17 +16,14 @@ app = FastAPI(title=settings.PROJECT_NAME, version=settings.PROJECT_VERSION)
 public_channel = PublicChannel()
 quantum_channel = QuantumLink()
 
-# Include Routes
 app.include_router(router)
 
 
 if __name__ == "__main__":
-    # Start listeners in separate daemon threads
     public_thread = threading.Thread(target=public_channel.listen, args=(8081,), daemon=True)
     quantum_thread = threading.Thread(target=quantum_channel.listen, args=(4081,), daemon=True)
 
     public_thread.start()
     quantum_thread.start()
 
-    # Run Uvicorn in the main thread
     uvicorn.run(app, host=settings.HOST, port=settings.PORT)
