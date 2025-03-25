@@ -1,9 +1,11 @@
 import time
 from managers.connection_storage import ConnectionStorage
 from managers.key_storage import KeyStorage
+from utils.config import settings
 
 class KeyManager:
     _instance = None  
+
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:

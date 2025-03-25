@@ -25,6 +25,14 @@ class PayloadGenerator:
             "event": event,
             "bases": bases,
         }
+    @staticmethod
+    def error_correction_bits(source_type, key_id, event, bits):
+        return {
+            "source_type": source_type,
+            "key_id": key_id,
+            "event": event,
+            "bits": bits
+    }
 
     @staticmethod
     def send_qubits(source_type, source_host, key_id, event, rho):

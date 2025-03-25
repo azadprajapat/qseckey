@@ -5,4 +5,5 @@ python-dotenv
 qiskit
 qiskit-aer
 numpy
-qiskit_experiments
+qiskit_ibm_provider
+qiskit_ibm_runtime

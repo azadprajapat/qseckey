@@ -2,18 +2,19 @@ import os
 import base64
 from managers.key_manager import KeyManager
 import uuid
+from utils.config import settings
 from enum import Enum,auto
 
 class QuantumManager:
-    _instance = None  # Singleton instance
-    #key_manager = KeyManager()
+    _instance = None
 
-    def __new__(cls):
-        if cls._instance is None:
+    def __new__(cls, *args, **kwargs):
+        """Ensure only one instance exists (Singleton)."""
+        if not cls._instance:
             cls._instance = super(QuantumManager, cls).__new__(cls)
-
         return cls._instance
-
+    def __init__(self):
+        self.key_generation_capacity = settings.KEY_GENERATION_CAPACITY
     def test_connection(self,connection_info):
         print("Quantum manager: testing connection...")
         quantum_link_info ={
@@ -30,7 +31,10 @@ class QuantumManager:
         PublicChannel.send(public_channel_info, {"source_type": "SENDER","event":"TEST"})
 
     def generate_key(self,connection_info):
-        from managers.quantum_simulator import SenderInstanceFactory  # Delayed import
+        if self.key_generation_capacity <= 0:
+            print("Quantum manager: key generation capacity reached.")
+            return
+        from managers.quantum_key_generator import SenderInstanceFactory  # Delayed import
         """Generates a random 256-bit key encoded in base64."""
         print("Quantum manager: generating key...")
         quantum_link_info ={
@@ -44,16 +48,19 @@ class QuantumManager:
 
         sender = SenderInstanceFactory.get_or_create(uuid.uuid4(),connection_info.get('connection_id'), connection_info.get('key_size'), quantum_link_info, public_channel_info)
         sender.run_protocol();
+        self.key_generation_capacity -= 1
 
 
     
     def store_key(self, key_id, key_data, connection_id=None):
         """Stores a key with an optional connection_id. key_id is mandatory."""
+
         from managers.key_manager import KeyManager
         key_manager = KeyManager()
 
         key_manager.store_key_in_storage(str(key_id),self.binary_array_to_base64(key_data),connection_id);
         print("Quantum Manager: storing the key to the KMS storage")
+        self.key_generation_capacity += 1
 
 
     import base64

@@ -3,7 +3,7 @@ import pickle
 import struct  # Used for packing/unpacking message length
 import threading
 from utils.config import Settings
-from managers.quantum_simulator import SenderInstanceFactory,ReceiverInstanceFactory
+from managers.quantum_key_generator import SenderInstanceFactory,ReceiverInstanceFactory
 
 class QuantumLink:
     listener_thread = None
