@@ -11,5 +11,6 @@ class Settings:
     ERROR_THRESHOLD = 0.05
     DEBUG = True
     KEY_GENERATION_CAPACITY = 1
+    USE_SIMULATOR = False
 
 settings = Settings()

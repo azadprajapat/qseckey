@@ -24,7 +24,7 @@ app.include_router(router)
 
 
 if __name__ == "__main__":
-    print("Saving the account")
+    
     simulator = QuantumSimulator()
     public_thread = threading.Thread(target=public_channel.listen, args=(8081,), daemon=True)
     quantum_thread = threading.Thread(target=quantum_channel.listen, args=(4081,), daemon=True)
