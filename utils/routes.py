@@ -1,38 +1,104 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from managers.key_manager import KeyManager
-from channels.public_channel import PublicChannel
-from utils.config import settings;
+from utils.config import settings
 
 router = APIRouter()
-key_manager = KeyManager();
+key_manager = KeyManager()
 
 @router.post("/register_connection")
 def register_connection(connection_data: dict):
-    # Validate required parameters
-    required_params = ['source_KME_ID', 'target_KME_ID', 'master_SAE_ID', 'slave_SAE_ID', 
-                      'key_size', 'max_keys_count', 'max_key_per_request', 'max_SAE_ID_count']
-    
+    """Registers a new connection with validation."""
+    required_params = [
+        'source_KME_ID', 'target_KME_ID', 'master_SAE_ID', 'slave_SAE_ID',
+        'max_keys_count', 'max_key_per_request', 'max_SAE_ID_count'
+    ]
+
+    # Set default key size if not provided
+    if connection_data.get('key_size') is None:
+        connection_data['key_size'] = settings.DEFAULT_KEY_SIZE
+
+    # Check for missing required parameters
     missing_params = [param for param in required_params if param not in connection_data]
     if missing_params:
-        return {"error": f"Missing required parameters: {', '.join(missing_params)}"}, 400
-    if(connection_data['key_size'] >settings.MAX_KEY_SIZE):
-        return {"error": f"Key size exceeds the maximum allowed size"}, 400
+        return JSONResponse(
+            content={"error": f"Missing required parameters: {', '.join(missing_params)}"},
+            status_code=400
+        )
+
+    # Validate key size limit
+    if connection_data['key_size'] > settings.MAX_KEY_SIZE:
+        return JSONResponse(
+            content={"error": "Key size exceeds the maximum allowed size"},
+            status_code=400
+        )
+
     try:
         connection_response = key_manager.create_connection(connection_data)
-        return {
-            "message": "Connection registered successfully",
-            "connection_details": connection_response
-        }
+        return JSONResponse(
+            content={"message": "Connection registered successfully", "connection_details": connection_response},
+            status_code=201
+        )
     except Exception as e:
-        return {"error": f"Failed to register connection: {str(e)}"}, 500
+        return JSONResponse(
+            content={"error": f"Failed to register connection: {str(e)}"},
+            status_code=500
+        )
 
 @router.get("/get_key")
-def get_key(key_id: str = None, slave_host: str = None):
+def get_key(key_id: str = None, slave_host: str = None, key_size: int = None):
+    """Retrieves a key from storage."""
     if not key_id and not slave_host:
-        return {"error": "Missing required parameters: key_id, slave_host"}, 400    
-    key_response = key_manager.retrieve_key_from_storage(key_id, slave_host)
-    return key_response
+        return JSONResponse(
+            content={"error": "Missing required parameters: key_id or slave_host"},
+            status_code=400
+        )
+
+    try:
+        key_response = key_manager.fetch_key_from_storage(key_id, slave_host, key_size)
+        return JSONResponse(content=key_response, status_code=200)
+    except Exception as e:
+        return JSONResponse(
+            content={"error": f"Failed to retrieve key: {str(e)}"},
+            status_code=500
+        )
+
+@router.post("/generate_merged_key")
+def generate_merged_key(payload: dict):
+    """Generates a merged key from the provided key IDs."""
+    key_id = payload.get('key_id')
+    key_ids_payload = payload.get('key_ids_payload')
+
+    if not key_id or not key_ids_payload:
+        return JSONResponse(
+            content={"error": "Missing required parameters: key_id, key_ids_payload"},
+            status_code=400
+        )
+
+    try:
+        key_manager.merge_and_prepare_final_key_slave(key_id, key_ids_payload)
+        return JSONResponse(
+            content={"message": "Merged key generated successfully"},
+            status_code=200
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={"error": f"Failed to generate merged key: {str(e)}"},
+            status_code=500
+        )
 
 @router.post("/close_connection")
 def close_connection(connection_id: str):
-    return {"message": "Connection closed successfully"}
+    """Closes an existing connection."""
+    try:
+        # Assuming a function exists to handle connection closure
+        key_manager.close_connection(connection_id)
+        return JSONResponse(
+            content={"message": "Connection closed successfully"},
+            status_code=200
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={"error": f"Failed to close connection: {str(e)}"},
+            status_code=500
+        )
