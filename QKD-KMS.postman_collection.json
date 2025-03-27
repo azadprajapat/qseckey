@@ -1,0 +1,150 @@
+{
+	"info": {
+		"_postman_id": "f16ae1e4-ef3d-4110-96b6-457886f45079",
+		"name": "QKD-KMS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14845807",
+		"_collection_link": "https://grey-satellite-686552.postman.co/workspace/New-Team-Workspace~519644e3-f6cc-44f1-a6e1-982b9582443d/collection/14845807-f16ae1e4-ef3d-4110-96b6-457886f45079?action=share&source=collection_link&creator=14845807"
+	},
+	"item": [
+		{
+			"name": "Register Connection",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"source_KME_ID\": \"sender_app\",\r\n  \"target_KME_ID\": \"receiver_app\",\r\n  \"master_SAE_ID\": \"ghi\",\r\n  \"slave_SAE_ID\": \"jk3\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/register_connection",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"register_connection"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Sender Get Key",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/get_key?slave_host=jk3",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"get_key"
+					],
+					"query": [
+						{
+							"key": "slave_host",
+							"value": "jk3"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Receiver Get Key",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8001/get_key?key_id=1f935b00-238d-4ae5-863e-9ba421ce88bd",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8001",
+					"path": [
+						"get_key"
+					],
+					"query": [
+						{
+							"key": "key_id",
+							"value": "1f935b00-238d-4ae5-863e-9ba421ce88bd"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "close connection",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/close_connection",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"close_connection"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

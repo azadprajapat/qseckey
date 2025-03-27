@@ -10,14 +10,17 @@ key_manager = KeyManager()
 def register_connection(connection_data: dict):
     """Registers a new connection with validation."""
     required_params = [
-        'source_KME_ID', 'target_KME_ID', 'master_SAE_ID', 'slave_SAE_ID',
-        'max_keys_count', 'max_key_per_request', 'max_SAE_ID_count'
+        'source_KME_ID', 'target_KME_ID', 'master_SAE_ID', 'slave_SAE_ID'
     ]
 
     # Set default key size if not provided
     if connection_data.get('key_size') is None:
         connection_data['key_size'] = settings.DEFAULT_KEY_SIZE
-
+    if connection_data.get('max_keys_count') is None:
+        connection_data['max_keys_count']=settings.MAX_KEYS_COUNT
+    connection_data['max_key_per_request']=0
+    connection_data['max_SAE_ID_count']=0
+     
     # Check for missing required parameters
     missing_params = [param for param in required_params if param not in connection_data]
     if missing_params:
