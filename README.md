@@ -1,7 +1,8 @@
 # ETSI-QKD-KMS
 An application for securely distributing cryptographic keys from a QKD system to applications across a distributed network.
 
-The design will adhere to the ETSI GS QKD 014 standard, ensuring seamless integration of the Key Management System (KMS) with a QKD simulator to efficiently generate, manage, and distribute cryptographic keys across the network.
+# Objective
+The design will adhere to the ETSI GS QKD 014 standard, ensuring seamless integration of the Key Management System (KMS) with a QKD simulator to efficiently generate, manage, and distribute cryptographic keys across the network. This proposed interface is capable of storing QKD keys and can be sent to the application entities upon request. 
 
 # Prerequisites
 - Docker
