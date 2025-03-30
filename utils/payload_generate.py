@@ -35,6 +35,15 @@ class PayloadGenerator:
     }
 
     @staticmethod
+    def ldpc_syndrome(source_type, key_id, event, syndrome):
+        return {
+            "source_type": source_type,
+            "key_id": key_id,
+            "event": event,
+            "syndrome": syndrome
+    }
+
+    @staticmethod
     def send_qubits(source_type, source_host, key_id, event, rho):
         return {
             "source_type": source_type,

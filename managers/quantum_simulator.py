@@ -44,11 +44,11 @@ class QuantumSimulator:
         return counts
 
     def _execute_ibm(self,qc):
-        pm = generate_preset_pass_manager(backend=self.backend, optimization_level=1)
-        isa_circuit = pm.run(qc)
+        pm = generate_preset_pass_manager(backend=self.backend)
+        isa_circuit = pm.run(qc.reverse_bits())
 
         sampler = Sampler(mode=self.backend)
-        sampler.options.default_shots = 1024 
+        sampler.options.default_shots = 10000 
         print("Running the circuit on the backend")
         job = sampler.run([isa_circuit])
         print(f"Job ID is {job.job_id()}")

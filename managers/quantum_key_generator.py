@@ -23,6 +23,7 @@ class QuantumProtocolStatus(Enum):
     ERROR_CORRECTION = auto()
     RECEIVED_QUBITS = auto()
     BASES_SENT = auto()
+    KEY_STORAGE = auto()
     COMPLETED = auto()
     INITIALIZED = auto()
 
@@ -115,8 +116,6 @@ class Sender:
                 print(f"QBER too high. Discarding transaction.")
                 self.state=QuantumProtocolStatus.COMPLETED
                 return
-                
-
             final_key = self.matching_bits[:int(self.qubits_requested / 4)]    
             final_key_str =''.join(map(str, final_key))
             print("final key in Sender",final_key_str)
@@ -178,14 +177,14 @@ class Receiver:
         print("Max qubits supported: ",settings.NUM_QUBITS)
         print("Qubits provided", num_qubits)
         simulator  = QuantumSimulator()
-        counts = simulator.execute_job(qc)
-        best_outcome = max(counts, key=counts.get)
-        max_frequency = max(counts.values())
-
-
+        counts = simulator.execute_job(qc)  
+        best_outcome = max(counts, key=counts.get)  
+        max_frequency = counts[best_outcome]  
         max_count = sum(1 for freq in counts.values() if freq == max_frequency)
 
-        print("Number of outcomes with maximum frequency: ",max_frequency," and count", max_count)
+        print("Best outcome:", best_outcome)
+        print("Max frequency:", max_frequency)
+        print("Number of outcomes with max frequency:", max_count)
         best_outcome = np.array([int(bit) for bit in best_outcome],dtype=int)
         print("measurement on the quantum simulator completed successfully",best_outcome)
 
@@ -215,8 +214,7 @@ class Receiver:
             if qber > settings.ERROR_THRESHOLD:
                 print(f"QBER too high. Discarding transaction.")
                 self.state=QuantumProtocolStatus.COMPLETED
-                return
-            
+                return  
             final_key = self.matching_bits[:int(self.qubits_requested / 4)]           
             final_key_str =''.join(map(str, final_key))
             print("final key in Receiver",final_key_str)

@@ -7,6 +7,7 @@ import uuid
 
 class KeyManager:
     _instance = None  
+    started=False
 
 
     def __new__(cls, *args, **kwargs):
@@ -133,7 +134,10 @@ class KeyManager:
             for connection in connections:
                 quantum_manager = QuantumManager()
                 quantum_manager.generate_key(connection)
+#                self.started=True
             time.sleep(10)  # Run periodically every 10 seconds
+            if(self.started):
+                break
 
     def update_key_count_connection(self, connection_id):
         """Updates the stored_key_count for a connection."""
