@@ -1,5 +1,5 @@
-from managers.connection_storage import ConnectionStorage
-from managers.key_storage import KeyStorage
+from services.storage.connection_storage import ConnectionStorage
+from services.storage.key_storage import KeyStorage
 class ConnectionStorageHelper:
     _instance = None  
     def __new__(cls, *args, **kwargs):
@@ -40,7 +40,8 @@ class ConnectionStorageHelper:
 
 
     def delete_connection(self, application_id):
-        return self.connectionStorage.delete(application_id)
+         self.connectionStorage.delete(application_id)
+         self.key_storage.remove_key(application_id=application_id)
 
     def get_active_connections(self):
         connection_list = self.connectionStorage.read()

@@ -1,6 +1,6 @@
 import time
-from managers.connection_storage_helper import ConnectionStorageHelper
-from managers.key_storage import KeyStorage
+from services.connection_storage_helper import ConnectionStorageHelper
+from services.storage.key_storage import KeyStorage
 from utils.config import settings
 from services.request_sender import RequestSender
 import uuid
@@ -33,7 +33,6 @@ class KeyManager:
         return None
 
     def delete_connection(self, application_id):
-        self.key_storage.remove_key(application_id=application_id)
         self.connection_storage_helper.delete_connection(application_id)
         print(f"Connection {application_id} and its associated keys deleted successfully")
 
