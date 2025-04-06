@@ -17,8 +17,8 @@ The design will adhere to the ETSI GS QKD 014 standard, ensuring seamless integr
 https://docs.google.com/document/d/14FPwCqk0Pru6AEgg1vNN2Zz7vKAVvZKS_mIe-GKriFs/edit?usp=sharing
 
 # Entities:
-- Connection DB: Stores details such as connection_id, QoS data, Master SAE ID, Slave SAE ID, Master KME ID, Slave KME ID, available keys, key size, and other relevant information. The KMS server will periodically check this db and request the QKD application server to generate the keys in the background.
-- Key Storage: Contains connection_id, key_id, and key_data for storing generated keys.
+- Connection DB: Stores details such as application_id, QoS data, Master SAE ID, Slave SAE ID, Master KME ID, Slave KME ID, available keys, key size, and other relevant information. The KMS server will periodically check this db and request the QKD application server to generate the keys in the background.
+- Key Storage: Contains application_id, key_id, and key_data for storing generated keys.
 - QKD Application Server: Acts as an interface between the KMS server and the Quantum Device/Simulator, handling processing and logical operations related to key generation and storage.
 - Quantum Simulator and Link: Connects to a quantum simulator, processes qubit information, and shares the results with the QKD application server or another quantum device via a quantum link.
 

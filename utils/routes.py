@@ -37,7 +37,7 @@ def register_connection(connection_data: dict):
         )
 
     try:
-        connection_response = key_manager.create_connection(connection_data)
+        connection_response = key_manager.register_application(connection_data)
         return JSONResponse(
             content={"message": "Connection registered successfully", "connection_details": connection_response},
             status_code=201
@@ -91,11 +91,11 @@ def generate_merged_key(payload: dict):
         )
 
 @router.post("/close_connection")
-def close_connection(connection_id: str):
+def close_connection(application_id: str):
     """Closes an existing connection."""
     try:
         # Assuming a function exists to handle connection closure
-        key_manager.close_connection(connection_id)
+        key_manager.close_connection(application_id)
         return JSONResponse(
             content={"message": "Connection closed successfully"},
             status_code=200

@@ -7,13 +7,13 @@ class PayloadGenerator:
             "event": event
         }
     @staticmethod
-    def protocol_begin(source_type, source_host, key_size, connection_id, event, key_id):
+    def protocol_begin(source_type, source_host, key_size, application_id, event, key_id):
         return {
             "source_type": source_type,
             "source_host": source_host,
             "key_id": key_id,
             "event": event,
-            "connection_id": connection_id,
+            "application_id": application_id,
             "key_size": key_size,
         }
 

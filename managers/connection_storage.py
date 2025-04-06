@@ -1,26 +1,30 @@
+import threading
+from typing import Any, Dict, List, Optional
+
 class ConnectionStorage:
     _instance = None
-    _storage = {}  
+    _lock = threading.Lock()
+
     def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super(ConnectionStorage, cls).__new__(cls)
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(ConnectionStorage, cls).__new__(cls)
+                cls._instance._storage = {}
+                cls._instance._storage_lock = threading.Lock()
         return cls._instance
 
-    def store_connection(self, connection_id, details):
-        self._storage[connection_id] = details
+    def create(self, application_id: str, details: Dict[str, Any]) -> None:
+        with self._storage_lock:
+            self._storage[application_id] = details
+            print(f"Connection {application_id} created successfully")
+            return details
 
-    def retrieve_connection(self, connection_id):
-        return self._storage.get(connection_id)
+    def read(self, application_id: Optional[str] = None) -> Optional[Any]:
+        with self._storage_lock:
+            if application_id is None:
+                return list(self._storage.values())
+            return self._storage.get(application_id)
 
-    def delete_connection(self, connection_id):
-        if connection_id in self._storage:
-            del self._storage[connection_id]
-
-    def get_active_connections(self):
-
-        return [
-            self._storage.get(conn_id) for conn_id in self._storage.keys()
-            if self._storage[conn_id]['stored_key_count'] < self._storage[conn_id]['max_keys_count']
-        ]
-
-
+    def delete(self, application_id: str) -> bool:
+        with self._storage_lock:
+            return self._storage.pop(application_id, None) is not None

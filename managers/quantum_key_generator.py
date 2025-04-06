@@ -39,11 +39,11 @@ class SenderInstanceFactory:
     _instances = {}
 
     @staticmethod
-    def get_or_create(key_id,connection_id, key_size, quantum_link_info, public_channel_info):
+    def get_or_create(key_id,application_id, key_size, quantum_link_info, public_channel_info):
         if key_id not in SenderInstanceFactory._instances:
             if(key_size == None):
-                print("Key size is not provided",key_id,connection_id)
-            SenderInstanceFactory._instances[key_id] = Sender(key_id,connection_id, int(key_size), quantum_link_info, public_channel_info)
+                print("Key size is not provided",key_id,application_id)
+            SenderInstanceFactory._instances[key_id] = Sender(key_id,application_id, int(key_size), quantum_link_info, public_channel_info)
         return SenderInstanceFactory._instances[key_id]
 
 def get_public_channel():
@@ -53,8 +53,8 @@ def get_quantum_channel():
     from channels.quatum_link import QuantumLink  # Delayed import
     return QuantumLink()  
 class Sender:
-    def __init__(self,key_id,connection_id, key_size,quantum_link_info, public_channel_info):
-        self.connection_id =connection_id
+    def __init__(self,key_id,application_id, key_size,quantum_link_info, public_channel_info):
+        self.application_id =application_id
         self.key_size = key_size
         self.qubits_requested = key_size*4
         self.key_id = key_id
@@ -86,7 +86,7 @@ class Sender:
         public_channel =get_public_channel();
         quantum_channel =get_quantum_channel();
         if self.state == QuantumProtocolStatus.STARTED:
-            res = public_channel.send(self.public_channel_info['target'],PayloadGenerator.protocol_begin("SENDER",self.public_channel_info,self.key_size,self.connection_id,DataEvents.BEGIN,self.key_id))
+            res = public_channel.send(self.public_channel_info['target'],PayloadGenerator.protocol_begin("SENDER",self.public_channel_info,self.key_size,self.application_id,DataEvents.BEGIN,self.key_id))
             if(res):
                 self.state = QuantumProtocolStatus.INITIALIZED
                 self.run_protocol()
@@ -121,7 +121,7 @@ class Sender:
             print("final key in Sender",final_key_str)
             from managers.quantum_manager import QuantumManager
             quantum_manager = QuantumManager()  
-            quantum_manager.store_key(self.key_id,final_key_str,self.connection_id)
+            quantum_manager.store_key(self.key_id,final_key_str,self.application_id)
             self.state = QuantumProtocolStatus.COMPLETED
     
     def serialize_circuit(self, qc):

@@ -46,19 +46,19 @@ class QuantumManager:
             "source":connection_info.get('source_KME_ID')
         }
 
-        sender = SenderInstanceFactory.get_or_create(uuid.uuid4(),connection_info.get('connection_id'), connection_info.get('key_size'), quantum_link_info, public_channel_info)
+        sender = SenderInstanceFactory.get_or_create(uuid.uuid4(),connection_info.get('application_id'), connection_info.get('key_size'), quantum_link_info, public_channel_info)
         sender.run_protocol();
         self.key_generation_capacity -= 1
 
 
     
-    def store_key(self, key_id, key_data, connection_id=None):
-        """Stores a key with an optional connection_id. key_id is mandatory."""
+    def store_key(self, key_id, key_data, application_id=None):
+        """Stores a key with an optional application_id. key_id is mandatory."""
 
         from managers.key_manager import KeyManager
         key_manager = KeyManager()
 
-        key_manager.store_key_in_storage(str(key_id),self.binary_array_to_base64(key_data),connection_id);
+        key_manager.store_key_in_storage(str(key_id),self.binary_array_to_base64(key_data),application_id);
         print("Quantum Manager: storing the key to the KMS storage")
         self.key_generation_capacity += 1
 
