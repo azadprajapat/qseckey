@@ -58,7 +58,7 @@ def get_key(key_id: str = None, slave_host: str = None, key_size: int = None):
         )
 
     try:
-        key_response = key_manager.fetch_key_from_storage(key_id, slave_host, key_size)
+        key_response = key_manager.find_keys(key_id, slave_host, key_size)
         return JSONResponse(content=key_response, status_code=200)
     except Exception as e:
         return JSONResponse(
@@ -79,7 +79,7 @@ def generate_merged_key(payload: dict):
         )
 
     try:
-        key_manager.merge_and_prepare_final_key_slave(key_id, key_ids_payload)
+        key_manager.prepare_key_receiver(key_id, key_ids_payload)
         return JSONResponse(
             content={"message": "Merged key generated successfully"},
             status_code=200

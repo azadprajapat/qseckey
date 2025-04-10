@@ -58,19 +58,6 @@ class QuantumManager:
         from managers.key_manager import KeyManager
         key_manager = KeyManager()
 
-        key_manager.store_key_in_storage(str(key_id),self.binary_array_to_base64(key_data),application_id);
+        key_manager.store_key_in_storage(str(key_id),key_data,application_id);
         print("Quantum Manager: storing the key to the KMS storage")
         self.key_generation_capacity += 1
-
-
-    import base64
-
-    def binary_array_to_base64(self,binary_array):
-        # Convert binary array to bytes
-        return binary_array
-        byte_data = bytes(int("".join(map(str, binary_array[i:i+8])), 2) for i in range(0, len(binary_array), 8))
-    
-        # Encode bytes to Base64
-        base64_encoded = base64.b64encode(byte_data).decode('utf-8')
-    
-        return base64_encoded
