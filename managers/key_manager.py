@@ -1,6 +1,6 @@
 import time
 from services.connection_storage_helper import ConnectionStorageHelper
-from services.storage.key_storage import KeyStorage
+from services.key_storage_helper import KeyStorageHelper
 from utils.config import settings
 from services.request_sender import RequestSender
 import uuid
@@ -18,7 +18,7 @@ class KeyManager:
     def __init__(self):
         if not hasattr(self, 'initialized'):  
             self.connection_storage_helper = ConnectionStorageHelper()
-            self.key_storage = KeyStorage()
+            self.key_storage_helper = KeyStorageHelper()
             self.initialized = True  
     def register_application(self, connection_data):
         application_id = connection_data.get('slave_SAE_ID')
@@ -39,6 +39,8 @@ class KeyManager:
     def fetch_key_from_storage(self,key_id,application_id,key_size):
         if(application_id):
             connection_data = self.connection_storage_helper.retrieve_connection(application_id)
+            if not connection_data:
+                return "No connection found for the provided application ID"
             if(connection_data['stored_key_count']<0):
                 return "No keys are available currently for the provided slave. Please wait..."
             if(key_size and key_size!=connection_data['key_size']):
@@ -48,9 +50,9 @@ class KeyManager:
                     return self.merge_and_transmit_keys(key_id,connection_data,application_id,key_size)
 
             else:
-                return self.retrieve_key_from_storage(key_id,application_id)
+                return self.key_storage_helper.retrieve_key_from_storage(key_id,application_id)
         else:
-            return self.retrieve_key_from_storage(key_id,application_id)
+            return self.key_storage_helper.retrieve_key_from_storage(key_id,application_id)
 
     def merge_and_transmit_keys(self,key_id,connection_data,application_id,key_size):
         keys_count = key_size//connection_data['key_size']
@@ -60,7 +62,7 @@ class KeyManager:
         final_key_id = str(uuid.uuid4())
         final_key = ""
         for i in range(keys_count):
-            key = self.retrieve_key_from_storage(key_id,application_id)
+            key = self.key_storage_helper.retrieve_key_from_storage(key_id,application_id)
             key_ids.append(key['key_id'])
             final_key += key['key_data']
         sender = RequestSender(base_url="http://" + connection_data['target_KME_ID'] + ":" + str(settings.PORT))
@@ -74,27 +76,17 @@ class KeyManager:
     def merge_and_prepare_final_key_slave(self,key_id,key_ids_payload):
         final_key = ""
         for local_key_id in key_ids_payload:
-            key = self.retrieve_key_from_storage(local_key_id,None)
+            key = self.key_storage_helper.retrieve_key_from_storage(local_key_id,None)
             if(key == None):
                 return "Key not found for the provided key ID"
             final_key += key['key_data']
-        self.store_key_in_storage(key_id,final_key,None)
+        self.key_storage_helper.store_key_in_storage(key_id,final_key,None)
         return "Merged key generated successfully on Receiver KMS"
-    def retrieve_key_from_storage(self, key_id, application_id):
-        keys = self.key_storage.get_keys(key_id, application_id)
-        if len(keys) > 0:
-            key = keys[0]
-            print(f"Key retrieved for Connection ID {application_id}, Key ID {key_id}: {key}")
-            self.key_storage.remove_key(key_id=key["key_id"])
-            return key
-        print(f"No key found for Connection ID {application_id}, Key ID {key_id}")
-        return None
-
+    
     def store_key_in_storage(self, key_id, key_data,application_id):
         """Stores a key and updates the connection key count."""
-        self.key_storage.save_key(key_id, key_data, application_id)
+        self.key_storage_helper.store_key_in_storage(key_id, key_data, application_id)
         print(f"Key stored for ID {key_id} with connection ID {application_id}")
-        print(self.key_storage._storage)
 
     def process_connections(self):
         """Periodically processes active connections to generate keys."""

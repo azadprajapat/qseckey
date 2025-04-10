@@ -148,7 +148,6 @@ class ReceiverInstanceFactory:
             ReceiverInstanceFactory._instances[key_id] = Receiver(key_id,int(key_size), public_channel_info)
         return ReceiverInstanceFactory._instances[key_id]
     
-
 class Receiver:
     def __init__(self, key_id, key_size, public_channel_info):
         self.qubits_requested = key_size*4

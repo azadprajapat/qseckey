@@ -25,7 +25,7 @@ class KeyStorage:
         })
         print(f"Key {key_id} saved for connection {application_id}")
 
-    def get_keys(self, key_id=None, application_id=None):
+    def read_keys(self, key_id=None, application_id=None):
         """Retrieves keys based on key_id or application_id. Returns an empty list if nothing is found."""
         if key_id:
             for entry in self._storage:
@@ -38,7 +38,7 @@ class KeyStorage:
 
         return []  # Return an empty list instead of None
 
-    def remove_key(self, key_id=None, application_id=None):
+    def delete_keys(self, key_id=None, application_id=None):
         """Removes keys by key_id or application_id. Returns False if no parameters passed."""
         if key_id:
             new_storage = [entry for entry in self._storage if entry["key_id"] != key_id]
