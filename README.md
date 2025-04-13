@@ -1,4 +1,4 @@
-# ETSI-QKD-KMS
+# QSecKey
 An application for securely distributing cryptographic keys from a QKD system to applications across a distributed network.
 
 # Objective
