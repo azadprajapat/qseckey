@@ -26,6 +26,9 @@ class KeyManager:
             process_connection_thread.start()
 
     def register_application(self, connection_data):
+        if(self.isReceiverKmsRunning(connection_data)== False):
+            raise Exception("Receiver KMS is not running")
+        
         return self.connection_storage_helper.store_connection(
             connection_data.get('slave_SAE_ID'), connection_data
         )
@@ -66,8 +69,7 @@ class KeyManager:
             key_ids.append(key['key_id'])
             final_key += key['key_data']
 
-        sender = RequestSender(f"http://{conn['target_KME_ID']}:{settings.PORT}")
-        res = sender.post("/generate_merged_key", json={"key_id": final_key_id, "key_ids_payload": key_ids})
+        res = self._httpSender(conn).post("/generate_merged_key", json={"key_id": final_key_id, "key_ids_payload": key_ids})
         return {'key_id': final_key_id, 'key_data': final_key} if res.status_code == 200 else "Failed to generate key"
 
     def prepare_key_receiver(self, key_id, key_ids_payload):
@@ -84,12 +86,25 @@ class KeyManager:
         self.key_storage_helper.store_key_in_storage(key_id, key_data, application_id)
         print(f"Key stored for ID {key_id} with connection ID {application_id}")
 
+    def isReceiverKmsRunning(self,connection_info):
+        res = self._httpSender(connection_info).get("/ping")
+        if res and res.status_code == 200:
+            print(f"Receiver KMS is up and running")
+            return True
+        else:
+            print(f"Receiver KMS is not running")
+            return False
+
     def process_connections(self):
         while True:
             connections = self.connection_storage_helper.get_active_connections()
-            print("KeyManager listening for active connections...")
             for conn in connections:
                 self.quantum_manager.generate_key(conn)
             time.sleep(10)
             if self.started:
                 break
+   
+    def _httpSender(self,connection_info):
+        target_kme_id = connection_info.get('target_KME_ID')
+        httpSender = RequestSender(f"http://{target_kme_id}:{settings.PORT}")
+        return httpSender

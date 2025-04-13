@@ -105,3 +105,8 @@ def close_connection(application_id: str):
             content={"error": f"Failed to close connection: {str(e)}"},
             status_code=500
         )
+
+@router.get("/ping")
+def ping():
+    """Simple health check endpoint."""
+    return JSONResponse(content={"message": "Pong"}, status_code=200)

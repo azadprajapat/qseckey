@@ -11,9 +11,10 @@ class RequestSender:
         try:
             response = requests.get(url, params=params, headers=headers)
             response.raise_for_status()
-            return response.json()  # Return JSON response
+            return response  # Return JSON response
         except requests.exceptions.RequestException as e:
-            return {"error": str(e)}
+            print (e)
+            return None
 
     def post(self, endpoint, data=None, json=None, headers=None):
         """Sends a POST request to the specified endpoint."""
@@ -21,7 +22,7 @@ class RequestSender:
         try:
             response = requests.post(url, data=data, json=json, headers=headers)
             response.raise_for_status()
-            return response  # Ensure JSON response is returned
+            return response 
         except requests.exceptions.RequestException as e:
             print(e)
             return None
