@@ -2,12 +2,12 @@ import threading
 import logging
 import uuid
 
-from utils.config import settings
-from services.quantum_simulator import QuantumSimulator
-from controllers.qkd.bb84.bb84_key_generator import BB84KeyGenerator
-from controllers.qkd.bb84.communication_handler import BB84CommunicationHandler
-from channels.public_channel import PublicChannel
-from channels.quantum_channel import QuantumChannel
+from qseckey.utils.config import settings
+from qseckey.services.quantum_simulator import QuantumSimulator
+from qseckey.controllers.qkd.bb84.bb84_key_generator import BB84KeyGenerator
+from qseckey.controllers.qkd.bb84.communication_handler import BB84CommunicationHandler
+from qseckey.channels.public_channel import PublicChannel
+from qseckey.channels.quantum_channel import QuantumChannel
 
 logger = logging.getLogger(__name__)
 

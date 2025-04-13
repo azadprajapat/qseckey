@@ -1,7 +1,7 @@
 # qkd_key_manager/core.py
 
-from utils.config import settings
-from controllers.key_manager import KeyManager
+from .utils.config import settings
+from .controllers.key_manager import KeyManager
 
 key_manager = None
 

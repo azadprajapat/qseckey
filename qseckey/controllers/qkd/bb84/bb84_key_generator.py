@@ -1,5 +1,5 @@
-from controllers.qkd.bb84.sender import Sender
-from controllers.qkd.bb84.receiver import Receiver
+from qseckey.controllers.qkd.bb84.sender import Sender
+from qseckey.controllers.qkd.bb84.receiver import Receiver
 
 class BB84KeyGenerator:
     _instances = {}

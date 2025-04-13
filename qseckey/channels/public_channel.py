@@ -2,27 +2,27 @@ import socket
 import pickle
 import struct
 import threading
-from utils.config import Settings
+from qseckey.utils.config import Settings
 
-class QuantumChannel:
+class PublicChannel:
     listener_thread = None
     stop_event = threading.Event()
     server_socket = None
-    _handlers = None
+    message_handler = None
 
     @staticmethod
-    def register_handler(handler_fn):
-        QuantumChannel._handlers = handler_fn
+    def register_handler(callback):
+        PublicChannel.message_handler = callback
 
     @staticmethod
     def send(host, data):
-        port = Settings.QUANTUM_LISTNER
+        port = Settings.PUBLIC_LISTNER
         serialized_data = pickle.dumps(data)
         data_length = struct.pack("!I", len(serialized_data))
 
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                print("Sending data to host and port on quantum link:", host, port)
+                print("Sending data to host and port on public link:", host, port)
                 s.connect((host, port))
                 s.sendall(data_length + serialized_data)
             return True
@@ -32,34 +32,32 @@ class QuantumChannel:
 
     @staticmethod
     def listen(port):
-        if QuantumChannel.listener_thread and QuantumChannel.listener_thread.is_alive():
-            print("Listener is already running.")
+        if PublicChannel.listener_thread and PublicChannel.listener_thread.is_alive():
+            print("Public channel Listener is already running.")
             return
 
         def handler():
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                QuantumChannel.server_socket = s
+                PublicChannel.server_socket = s
                 s.bind(("", port))
                 s.listen()
                 print(f"Listening on port {port}...")
 
-                while not QuantumChannel.stop_event.is_set():
+                while not PublicChannel.stop_event.is_set():
                     s.settimeout(1.0)
                     try:
                         conn, _ = s.accept()
                         with conn:
-                            data = QuantumChannel._receive_data(conn)
-                            print("Data received on quantum channel", data)
-                            if data and QuantumChannel._handlers:
-                                QuantumChannel._handlers(data)
-                            elif not QuantumChannel._handlers:
-                                print("No handler registered for incoming data.")
+                            data = PublicChannel._receive_data(conn)
+                            print("Data received on public channel", data)
+                            if data and PublicChannel.message_handler:
+                                PublicChannel.message_handler(data)
                     except socket.timeout:
                         continue
 
-        QuantumChannel.stop_event.clear()
-        QuantumChannel.listener_thread = threading.Thread(target=handler, daemon=True)
-        QuantumChannel.listener_thread.start()
+        PublicChannel.stop_event.clear()
+        PublicChannel.listener_thread = threading.Thread(target=handler, daemon=True)
+        PublicChannel.listener_thread.start()
 
     @staticmethod
     def _receive_data(conn):
@@ -85,10 +83,10 @@ class QuantumChannel:
 
     @staticmethod
     def stop_listener():
-        QuantumChannel.stop_event.set()
-        if QuantumChannel.server_socket:
-            QuantumChannel.server_socket.close()
-            QuantumChannel.server_socket = None
-        if QuantumChannel.listener_thread:
-            QuantumChannel.listener_thread.join()
+        PublicChannel.stop_event.set()
+        if PublicChannel.server_socket:
+            PublicChannel.server_socket.close()
+            PublicChannel.server_socket = None
+        if PublicChannel.listener_thread:
+            PublicChannel.listener_thread.join()
         print("Listener stopped.")

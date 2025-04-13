@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from controllers.key_manager import KeyManager
-from utils.config import settings
+from qseckey.controllers.key_manager import KeyManager
+from qseckey.utils.config import settings
 
 router = APIRouter()
 key_manager = KeyManager()

@@ -1,13 +1,13 @@
 import numpy as np
 from qiskit import QuantumCircuit,transpile
 from qiskit.qasm2 import dumps
-from controllers.qkd.bb84.bb84Utils import BB84Utils
-from utils.config import settings
+from qseckey.controllers.qkd.bb84.bb84Utils import BB84Utils
+from qseckey.utils.config import settings
 from qiskit_aer import Aer
-from services.quantum_simulator import QuantumSimulator
-from channels.public_channel import PublicChannel
-from channels.quantum_channel import QuantumChannel
-from utils.payload_generate import PayloadGenerator
+from qseckey.services.quantum_simulator import QuantumSimulator
+from qseckey.channels.public_channel import PublicChannel
+from qseckey.channels.quantum_channel import QuantumChannel
+from qseckey.utils.payload_generate import PayloadGenerator
 
 
 class Receiver:

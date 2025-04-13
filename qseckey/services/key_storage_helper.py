@@ -1,5 +1,5 @@
 
-from services.storage.key_storage import KeyStorage
+from qseckey.services.storage.key_storage import KeyStorage
 class KeyStorageHelper:
     _instance = None  
     def __new__(cls, *args, **kwargs):

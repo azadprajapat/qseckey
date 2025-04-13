@@ -1,5 +1,5 @@
 import time
-from utils.config import settings
+from qseckey.utils.config import settings
 from qiskit import transpile
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager

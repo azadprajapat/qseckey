@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from utils.routes import router
-from utils.config import settings
+from routes import router
+from qseckey.utils.config import settings
 import uvicorn
 import threading
 import logging

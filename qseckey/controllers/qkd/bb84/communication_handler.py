@@ -1,4 +1,4 @@
-from controllers.qkd.bb84.bb84_key_generator import BB84KeyGenerator
+from qseckey.controllers.qkd.bb84.bb84_key_generator import BB84KeyGenerator
 class BB84CommunicationHandler:
     def __init__(self, completion_callback):
         self.completion_callback = completion_callback

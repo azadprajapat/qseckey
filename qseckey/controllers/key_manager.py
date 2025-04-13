@@ -1,10 +1,10 @@
 import time
 import uuid
-from services.connection_storage_helper import ConnectionStorageHelper
-from services.key_storage_helper import KeyStorageHelper
-from services.request_sender import RequestSender
-from controllers.qkd.quantum_manager import QuantumManager
-from utils.config import settings
+from qseckey.services.connection_storage_helper import ConnectionStorageHelper
+from qseckey.services.key_storage_helper import KeyStorageHelper
+from qseckey.services.request_sender import RequestSender
+from qseckey.controllers.qkd.quantum_manager import QuantumManager
+from qseckey.utils.config import settings
 import threading
 
 class KeyManager:

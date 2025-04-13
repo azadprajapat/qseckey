@@ -1,5 +1,5 @@
-from services.storage.connection_storage import ConnectionStorage
-from services.key_storage_helper import KeyStorageHelper
+from qseckey.services.storage.connection_storage import ConnectionStorage
+from qseckey.services.key_storage_helper import KeyStorageHelper
 class ConnectionStorageHelper:
     _instance = None  
     def __new__(cls, *args, **kwargs):
