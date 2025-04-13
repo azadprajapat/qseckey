@@ -10,10 +10,34 @@ from qiskit.qasm2 import dumps
 from utils.config import settings
 from qiskit_aer import Aer
 from managers.quantum_simulator import QuantumSimulator
+from channels.public_channel import PublicChannel
+from channels.quantum_channel import QuantumChannel
 
 #from managers.quantum_manager import QuantumManager
 from utils.payload_generate import PayloadGenerator
 
+
+def handle_quantum_channel_data(data):
+    if(data['event'] == 'TEST'):
+        print("Quantum Channel: Test event received")
+        return
+    if data.get('source_type') == "SENDER":
+        receiver = ReceiverInstanceFactory.get_or_create(data.get('key_id'), "", "")
+        receiver.listener(data)
+    else:
+        print("Invalid Quantum Data event")
+
+def handle_public_channel_data(data):
+    if data.get('source_type') == "RECEIVER":
+        sender = SenderInstanceFactory.get_or_create(
+            data.get('key_id'), "", "", "", ""
+        )
+        sender.listener(data)
+    else:
+        receiver = ReceiverInstanceFactory.get_or_create(
+            data.get('key_id'), data.get('key_size'), data.get('source_host')
+        )
+        receiver.listener(data)
 
 class QuantumProtocolStatus(Enum):
     STARTED = auto()
@@ -50,8 +74,8 @@ def get_public_channel():
     from channels.public_channel import PublicChannel  # Delayed import
     return PublicChannel()  
 def get_quantum_channel():
-    from channels.quatum_link import QuantumLink  # Delayed import
-    return QuantumLink()  
+    from channels.quantum_channel import QuantumChannel  # Delayed import
+    return QuantumChannel()  
 class Sender:
     def __init__(self,key_id,application_id, key_size,quantum_link_info, public_channel_info):
         self.application_id =application_id
@@ -83,21 +107,19 @@ class Sender:
         return qc  # Return bits, bases, and the full quantum circuit
 
     def run_protocol(self):
-        public_channel =get_public_channel();
-        quantum_channel =get_quantum_channel();
         if self.state == QuantumProtocolStatus.STARTED:
-            res = public_channel.send(self.public_channel_info['target'],PayloadGenerator.protocol_begin("SENDER",self.public_channel_info,self.key_size,self.application_id,DataEvents.BEGIN,self.key_id))
+            res = PublicChannel.send(self.public_channel_info['target'],PayloadGenerator.protocol_begin("SENDER",self.public_channel_info,self.key_size,self.application_id,DataEvents.BEGIN,self.key_id))
             if(res):
                 self.state = QuantumProtocolStatus.INITIALIZED
                 self.run_protocol()
         if self.state == QuantumProtocolStatus.INITIALIZED:
             quantum_circuit = self.prepare_qubits()
             rho = self.serialize_circuit(quantum_circuit)
-            res = quantum_channel.send(self.quantum_link_info['target'], PayloadGenerator.send_qubits("SENDER",self.quantum_link_info,self.key_id,DataEvents.QUBITS,rho))
+            res = QuantumChannel.send(self.quantum_link_info['target'], PayloadGenerator.send_qubits("SENDER",self.quantum_link_info,self.key_id,DataEvents.QUBITS,rho))
             if(res):
                 self.state = QuantumProtocolStatus.SENDED_QUBIT
         if self.state == QuantumProtocolStatus.BASES_RECEIVED:
-            res = public_channel.send(self.public_channel_info['target'], PayloadGenerator.send_bases("SENDER",self.key_id,DataEvents.BASES,self.primary_bases))
+            res = PublicChannel.send(self.public_channel_info['target'], PayloadGenerator.send_bases("SENDER",self.key_id,DataEvents.BASES,self.primary_bases))
             if(res):
                 matched_bits = [self.bits[i] for i in range(self.qubits_requested) if self.primary_bases[i] == self.secondary_bases[i]]
                 if len(matched_bits) < self.qubits_requested/2:
@@ -106,7 +128,7 @@ class Sender:
                     return  # Discard transaction
             self.matching_bits = matched_bits
             print("matching bits on sender end:",self.matching_bits)
-            res = public_channel.send(self.public_channel_info['target'], PayloadGenerator.error_correction_bits("SENDER", self.key_id,DataEvents.ERROR_BITS,self.matching_bits[-int(self.qubits_requested / 4):]))
+            res = PublicChannel.send(self.public_channel_info['target'], PayloadGenerator.error_correction_bits("SENDER", self.key_id,DataEvents.ERROR_BITS,self.matching_bits[-int(self.qubits_requested / 4):]))
     
         if self.state == QuantumProtocolStatus.ERROR_CORRECTION:
             print("Error correction started")
@@ -190,10 +212,9 @@ class Receiver:
         return best_outcome  # Return the most likely measurement outcome
 
     def run_protocol(self):
-        public_channel =get_public_channel();
         if self.state == QuantumProtocolStatus.RECEIVED_QUBITS:
             self.key_data = self.measure_qubits(self.quantum_circuit,self.primary_bases)
-            res = public_channel.send(self.public_channel_info['source'], PayloadGenerator.send_bases("RECEIVER", self.key_id,DataEvents.BASES,self.primary_bases))
+            res = PublicChannel.send(self.public_channel_info['source'], PayloadGenerator.send_bases("RECEIVER", self.key_id,DataEvents.BASES,self.primary_bases))
             if(res):
                 self.state = QuantumProtocolStatus.BASES_SENT
         if self.state == QuantumProtocolStatus.BASES_RECEIVED:
@@ -204,7 +225,7 @@ class Receiver:
                 return  # Discard transaction
             self.matching_bits = matched_bits
             print("matching bits on receiver end:",self.matching_bits)
-            res = public_channel.send(self.public_channel_info['source'], PayloadGenerator.error_correction_bits("RECEIVER", self.key_id,DataEvents.ERROR_BITS,self.matching_bits[-int(self.qubits_requested / 4):]))
+            res = PublicChannel.send(self.public_channel_info['source'], PayloadGenerator.error_correction_bits("RECEIVER", self.key_id,DataEvents.ERROR_BITS,self.matching_bits[-int(self.qubits_requested / 4):]))
 
         if self.state == QuantumProtocolStatus.ERROR_CORRECTION:
             print("Error correction started")

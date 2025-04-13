@@ -3,6 +3,7 @@ import uuid
 from services.connection_storage_helper import ConnectionStorageHelper
 from services.key_storage_helper import KeyStorageHelper
 from services.request_sender import RequestSender
+from managers.quantum_manager import QuantumManager
 from utils.config import settings
 
 class KeyManager:
@@ -18,6 +19,7 @@ class KeyManager:
         if not hasattr(self, 'initialized'):
             self.connection_storage_helper = ConnectionStorageHelper()
             self.key_storage_helper = KeyStorageHelper()
+            self.quantum_manager = QuantumManager(self)
             self.initialized = True
 
     def register_application(self, connection_data):
@@ -80,12 +82,11 @@ class KeyManager:
         print(f"Key stored for ID {key_id} with connection ID {application_id}")
 
     def process_connections(self):
-        from managers.quantum_manager import QuantumManager
         while True:
             connections = self.connection_storage_helper.get_active_connections()
             print("KeyManager listening for active connections...")
             for conn in connections:
-                QuantumManager().generate_key(conn)
+                self.quantum_manager.generate_key(conn)
             time.sleep(10)
             if self.started:
                 break
