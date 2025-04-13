@@ -4,9 +4,6 @@ An application for securely distributing cryptographic keys from a QKD system to
 # Objective
 The design will adhere to the ETSI GS QKD 014 standard, ensuring seamless integration of the Key Management System (KMS) with a QKD simulator to efficiently generate, manage, and distribute cryptographic keys across the network. This proposed interface is capable of storing QKD keys and can be sent to the application entities upon request. 
 
-# Prerequisites
-- Docker
-- Docker Compose
 
 # Components
 - Secure Application Entities(SAEs): These entities can request for keys from KME based on the requirement.
@@ -22,7 +19,19 @@ https://docs.google.com/document/d/14FPwCqk0Pru6AEgg1vNN2Zz7vKAVvZKS_mIe-GKriFs/
 - QKD Application Server: Acts as an interface between the KMS server and the Quantum Device/Simulator, handling processing and logical operations related to key generation and storage.
 - Quantum Simulator and Link: Connects to a quantum simulator, processes qubit information, and shares the results with the QKD application server or another quantum device via a quantum link.
 
-# Setup:
+
+# usage
+ - Application server running in docker environment
+ - python module
+
+
+
+## Application server running in docker environment
+
+# Prerequisites
+- Docker
+- Docker Compose
+
 
 ## Build using Docker Compose
 Run the following command to build the application:
@@ -66,3 +75,18 @@ key_size
 curl --location 'http://127.0.0.1:8001/get_key?key_id=9cf3af44-5f17-4d9b-afd6-b8e8cb055db1' \
 --data ''
 ```
+
+
+
+## Python Module
+
+
+## Usage
+
+```python
+from qseckey import initialize, register_connection, get_key
+
+initialize({"MAX_KEYS_COUNT": 100})
+register_connection({...})
+get_key(key_id="abc123")
+

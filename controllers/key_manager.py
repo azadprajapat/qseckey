@@ -26,6 +26,7 @@ class KeyManager:
             process_connection_thread.start()
 
     def register_application(self, connection_data):
+        connection_data = self._validate_register_request(connection_data)
         if(self.isReceiverKmsRunning(connection_data)== False):
             raise Exception("Receiver KMS is not running")
         
@@ -43,6 +44,7 @@ class KeyManager:
         print(f"Connection {application_id} and its associated keys deleted successfully")
 
     def find_keys(self, key_id, application_id, key_size):
+        self._validateGetKeyRequest(key_id,application_id)
         if not application_id:
             return self.key_storage_helper.retrieve_key_from_storage(key_id, application_id)
         
@@ -108,3 +110,25 @@ class KeyManager:
         target_kme_id = connection_info.get('target_KME_ID')
         httpSender = RequestSender(f"http://{target_kme_id}:{settings.PORT}")
         return httpSender
+    
+    def _validateRegisterRequest(connection_data):
+        required_params = [
+        'source_KME_ID', 'target_KME_ID', 'master_SAE_ID', 'slave_SAE_ID']
+        if connection_data.get('key_size') is None:
+            connection_data['key_size'] = settings.DEFAULT_KEY_SIZE
+        if connection_data.get('max_keys_count') is None:
+            connection_data['max_keys_count']=settings.MAX_KEYS_COUNT
+        connection_data['max_key_per_request']=0
+        connection_data['max_SAE_ID_count']=0
+     
+        missing_params = [param for param in required_params if param not in connection_data]
+        if missing_params:
+            raise Exception(f"Missing required parameters: {', '.join(missing_params)}")
+
+        if connection_data['key_size'] > settings.MAX_KEY_SIZE:
+            raise Exception(f"Key size exceeds the maximum allowed size:",settings.MAX_KEY_SIZE)
+        return connection_data
+    
+    def _validateGetKeyRequest(key_id,slave_host):
+        if not key_id and not slave_host:
+            raise Exception(f"Missing required parameters: key_id or slave_host:",settings.MAX_KEY_SIZE)

@@ -9,33 +9,6 @@ key_manager = KeyManager()
 @router.post("/register_connection")
 def register_connection(connection_data: dict):
     """Registers a new connection with validation."""
-    required_params = [
-        'source_KME_ID', 'target_KME_ID', 'master_SAE_ID', 'slave_SAE_ID'
-    ]
-
-    # Set default key size if not provided
-    if connection_data.get('key_size') is None:
-        connection_data['key_size'] = settings.DEFAULT_KEY_SIZE
-    if connection_data.get('max_keys_count') is None:
-        connection_data['max_keys_count']=settings.MAX_KEYS_COUNT
-    connection_data['max_key_per_request']=0
-    connection_data['max_SAE_ID_count']=0
-     
-    # Check for missing required parameters
-    missing_params = [param for param in required_params if param not in connection_data]
-    if missing_params:
-        return JSONResponse(
-            content={"error": f"Missing required parameters: {', '.join(missing_params)}"},
-            status_code=400
-        )
-
-    # Validate key size limit
-    if connection_data['key_size'] > settings.MAX_KEY_SIZE:
-        return JSONResponse(
-            content={"error": "Key size exceeds the maximum allowed size"},
-            status_code=400
-        )
-
     try:
         connection_response = key_manager.register_application(connection_data)
         return JSONResponse(
@@ -50,13 +23,6 @@ def register_connection(connection_data: dict):
 
 @router.get("/get_key")
 def get_key(key_id: str = None, slave_host: str = None, key_size: int = None):
-    """Retrieves a key from storage."""
-    if not key_id and not slave_host:
-        return JSONResponse(
-            content={"error": "Missing required parameters: key_id or slave_host"},
-            status_code=400
-        )
-
     try:
         key_response = key_manager.find_keys(key_id, slave_host, key_size)
         return JSONResponse(content=key_response, status_code=200)
