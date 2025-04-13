@@ -25,8 +25,7 @@ class BB84CommunicationHandler:
                 application_id=data.get('application_id'),
                 key_size=data.get('key_size'),
                 quantum_link_info=data.get('quantum_link_info'),
-                public_channel_info=data.get('public_channel_info'),
-                completion_callback=self.completion_callback
+                public_channel_info=data.get('public_channel_info')
             )
             sender.listener(data)
         else:
