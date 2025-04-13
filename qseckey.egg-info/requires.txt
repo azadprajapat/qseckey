@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+qiskit
+qiskit-aer
+numpy
+qiskit_ibm_provider
+qiskit_ibm_runtime
