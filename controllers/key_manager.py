@@ -3,8 +3,9 @@ import uuid
 from services.connection_storage_helper import ConnectionStorageHelper
 from services.key_storage_helper import KeyStorageHelper
 from services.request_sender import RequestSender
-from managers.quantum_manager import QuantumManager
+from controllers.qkd.quantum_manager import QuantumManager
 from utils.config import settings
+import threading
 
 class KeyManager:
     _instance = None
@@ -21,6 +22,8 @@ class KeyManager:
             self.key_storage_helper = KeyStorageHelper()
             self.quantum_manager = QuantumManager(self)
             self.initialized = True
+            process_connection_thread = threading.Thread(target=self.process_connections, daemon=True)
+            process_connection_thread.start()
 
     def register_application(self, connection_data):
         return self.connection_storage_helper.store_connection(

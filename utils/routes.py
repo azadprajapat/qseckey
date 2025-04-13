@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from managers.key_manager import KeyManager
+from controllers.key_manager import KeyManager
 from utils.config import settings
 
 router = APIRouter()

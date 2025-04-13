@@ -1,12 +1,9 @@
 import uuid
 import threading
 from utils.config import settings
-from managers.quantum_simulator import QuantumSimulator
-from managers.quantum_key_generator import (
-    handle_public_channel_data,
-    handle_quantum_channel_data,
-    SenderInstanceFactory,
-)
+from services.quantum_simulator import QuantumSimulator
+from controllers.qkd.bb84.bb84_key_generator import BB84KeyGenerator
+from controllers.qkd.bb84.communication_handler import BB84CommunicationHandler
 from channels.public_channel import PublicChannel
 from channels.quantum_channel import QuantumChannel
 import logging
@@ -34,8 +31,9 @@ class QuantumManager:
         self.key_manager = key_manager
 
         QuantumSimulator()
-        PublicChannel.register_handler(handle_public_channel_data)
-        QuantumChannel.register_handler(handle_quantum_channel_data)
+        bb84CommunicationHandler = BB84CommunicationHandler(self.store_key)
+        PublicChannel.register_handler(bb84CommunicationHandler.handle_public_channel_data)
+        QuantumChannel.register_handler(bb84CommunicationHandler.handle_quantum_channel_data)
 
         threading.Thread(target=PublicChannel.listen, args=(settings.PUBLIC_LISTNER,), daemon=True).start()
         threading.Thread(target=QuantumChannel.listen, args=(settings.QUANTUM_LISTNER,), daemon=True).start()
@@ -56,13 +54,13 @@ class QuantumManager:
             "target": connection_info.get('target_KME_ID'),
             "source": connection_info.get('source_KME_ID')
         }
-
-        sender = SenderInstanceFactory.get_or_create(
-            uuid.uuid4(),
+        key_generator = BB84KeyGenerator(uuid.uuid4())
+        sender = key_generator.init_sender(
             connection_info.get('application_id'),
             connection_info.get('key_size'),
             quantum_link_info,
-            public_channel_info
+            public_channel_info,
+            self.store_key
         )
         sender.run_protocol()
         self.key_generation_capacity -= 1
