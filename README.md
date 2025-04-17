@@ -45,8 +45,6 @@ docker-compose up --build
 ```sh
 curl --location 'http://localhost:8000/register_connection' \
 --header 'Content-Type: application/json' \
---data 'curl --location 'http://localhost:8000/register_connection' \
---header 'Content-Type: application/json' \
 --data '{
   "source_KME_ID": "sender_app",
   "target_KME_ID": "receiver_app",
