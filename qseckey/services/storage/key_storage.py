@@ -1,4 +1,7 @@
 import json
+import logging
+logger = logging.getLogger(__name__)
+
 
 class KeyStorage:
     _instance = None
@@ -23,7 +26,7 @@ class KeyStorage:
             "key_id": key_id,
             "key_data": key_data
         })
-        print(f"Key {key_id} saved for connection {application_id}")
+        logger.info(f"Key {key_id} saved for connection {application_id}")
 
     def read_keys(self, key_id=None, application_id=None):
         """Retrieves keys based on key_id or application_id. Returns an empty list if nothing is found."""

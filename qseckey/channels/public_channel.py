@@ -3,6 +3,9 @@ import pickle
 import struct
 import threading
 from ..utils.config import Settings
+import logging
+logger = logging.getLogger(__name__)
+
 
 class PublicChannel:
     listener_thread = None
@@ -22,18 +25,18 @@ class PublicChannel:
 
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                print("Sending data to host and port on public link:", host, port)
+                logger.info(f"Sending data to host and port on public link with host {host} and port: {port}")
                 s.connect((host, port))
                 s.sendall(data_length + serialized_data)
             return True
         except (socket.error, Exception) as e:
-            print("Error sending data:", e)
+            logger.info("Error sending data:", e)
             return False
 
     @staticmethod
     def listen(port):
         if PublicChannel.listener_thread and PublicChannel.listener_thread.is_alive():
-            print("Public channel Listener is already running.")
+            logger.info("Public channel Listener is already running.")
             return
 
         def handler():
@@ -41,7 +44,7 @@ class PublicChannel:
                 PublicChannel.server_socket = s
                 s.bind(("", port))
                 s.listen()
-                print(f"Listening on port {port}...")
+                logger.info(f"Listening on port {port}...")
 
                 while not PublicChannel.stop_event.is_set():
                     s.settimeout(1.0)
@@ -49,7 +52,7 @@ class PublicChannel:
                         conn, _ = s.accept()
                         with conn:
                             data = PublicChannel._receive_data(conn)
-                            print("Data received on public channel", data)
+                            logger.info("Data received on public channel")
                             if data and PublicChannel.message_handler:
                                 PublicChannel.message_handler(data)
                     except socket.timeout:
@@ -78,7 +81,7 @@ class PublicChannel:
             return pickle.loads(received_data)
 
         except (pickle.UnpicklingError, struct.error, ConnectionError) as e:
-            print(f"Error receiving data: {e}")
+            logger.info(f"Error receiving data: {e}")
             return None
 
     @staticmethod
@@ -89,4 +92,4 @@ class PublicChannel:
             PublicChannel.server_socket = None
         if PublicChannel.listener_thread:
             PublicChannel.listener_thread.join()
-        print("Listener stopped.")
+        logger.info("Listener stopped.")

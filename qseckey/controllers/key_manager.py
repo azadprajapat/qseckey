@@ -6,6 +6,9 @@ from ..services.request_sender import RequestSender
 from ..controllers.qkd.quantum_manager import QuantumManager
 from ..utils.config import settings
 import threading
+import logging
+logger = logging.getLogger(__name__)
+
 
 class KeyManager:
     _instance = None
@@ -36,12 +39,12 @@ class KeyManager:
 
     def find_connection(self, application_id):
         connection = self.connection_storage_helper.retrieve_connection(application_id)
-        print(f"{'Connection found' if connection else 'No connection found'} for ID {application_id}")
+        logger.info(f"{'Connection found' if connection else 'No connection found'} for ID {application_id}")
         return connection
 
     def delete_connection(self, application_id):
         self.connection_storage_helper.delete_connection(application_id)
-        print(f"Connection {application_id} and its associated keys deleted successfully")
+        logger.info(f"Connection {application_id} and its associated keys deleted successfully")
 
     def find_keys(self, key_id, application_id, key_size):
         self._validateGetKeyRequest(key_id,application_id)
@@ -86,15 +89,15 @@ class KeyManager:
 
     def store_key_in_storage(self, key_id, key_data, application_id):
         self.key_storage_helper.store_key_in_storage(key_id, key_data, application_id)
-        print(f"Key stored for ID {key_id} with connection ID {application_id}")
+        logger.info(f"Key stored for ID {key_id} with connection ID {application_id}")
 
     def isReceiverKmsRunning(self,connection_info):
         res = self._httpSender(connection_info).get("/ping")
         if res and res.status_code == 200:
-            print(f"Receiver KMS is up and running")
+            logger.info(f"Receiver KMS is up and running")
             return True
         else:
-            print(f"Receiver KMS is not running")
+            logger.info(f"Receiver KMS is not running")
             return False
 
     def process_connections(self):

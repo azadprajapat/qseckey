@@ -7,6 +7,9 @@ from Crypto.Util.Padding import pad, unpad
 import time
 SERVER_URL_MASTER = "http://127.0.0.1:8000"
 SERVER_URL_SLAVE = "http://127.0.0.1:8001"
+import logging
+logger = logging.getLogger(__name__)
+
 
 def register_connection(slave_id):
     """Registers a new connection."""
@@ -24,7 +27,7 @@ def register_connection(slave_id):
     response = requests.post(f"{SERVER_URL_MASTER}/register_connection", json=payload)
     
     if response.status_code == 200:
-        print("Connection registered successfully!")
+        logger.info("Connection registered successfully!")
     else:
         raise Exception(f"Error registering connection: {response.text}")
 
@@ -81,19 +84,19 @@ secure_key_response = get_secure_key(slave_host)
 
 key_id = secure_key_response["key_id"]
 key_data = secure_key_response["key_data"]
-print("received the secure key of size from the server",len(key_data))
+logger.info(f"received the secure key of size from the server {len(key_data)}")
 padded_key_data = expand_key(key_data)
-print("Padded the key to perform the AES encryption",len(padded_key_data))
+logger.info(f"Padded the key to perform the AES encryption {len(padded_key_data)}")
 
 message = "Hello, this is BB84 test secure message"
 
 encrypted_msg = encrypt_message(message, padded_key_data)
-print(f"Encrypted Message: {encrypted_msg}")
+logger.info(f"Encrypted Message: {encrypted_msg}")
 
 # Simulating Slave SAE receiving encrypted data
 retrieved_key_data = request_key_from_server(key_id)
 padded_retrieved_key_data = expand_key(retrieved_key_data)
-print("Padded the key to perform the AES decryption",len(padded_retrieved_key_data))
+logger.info(f"Padded the key to perform the AES decryption {len(padded_retrieved_key_data)}")
 decrypted_msg = decrypt_message(encrypted_msg, padded_retrieved_key_data)
 
-print(f"Decrypted Message: {decrypted_msg}")
+logger.info(f"Decrypted Message: {decrypted_msg}")

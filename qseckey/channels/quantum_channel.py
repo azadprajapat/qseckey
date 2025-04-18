@@ -3,6 +3,8 @@ import pickle
 import struct
 import threading
 from ..utils.config import Settings
+import logging
+logger = logging.getLogger(__name__)
 
 class QuantumChannel:
     listener_thread = None
@@ -22,18 +24,18 @@ class QuantumChannel:
 
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                print("Sending data to host and port on quantum link:", host, port)
+                logger.info(f"Sending data to host and port on quantum link with host {host} and port: {port}")
                 s.connect((host, port))
                 s.sendall(data_length + serialized_data)
             return True
         except (socket.error, Exception) as e:
-            print("Error sending data:", e)
+            logger.info("Error sending data:", e)
             return False
 
     @staticmethod
     def listen(port):
         if QuantumChannel.listener_thread and QuantumChannel.listener_thread.is_alive():
-            print("Listener is already running.")
+            logger.info("Listener is already running.")
             return
 
         def handler():
@@ -41,7 +43,7 @@ class QuantumChannel:
                 QuantumChannel.server_socket = s
                 s.bind(("", port))
                 s.listen()
-                print(f"Listening on port {port}...")
+                logger.info(f"Listening on port {port}...")
 
                 while not QuantumChannel.stop_event.is_set():
                     s.settimeout(1.0)
@@ -49,11 +51,11 @@ class QuantumChannel:
                         conn, _ = s.accept()
                         with conn:
                             data = QuantumChannel._receive_data(conn)
-                            print("Data received on quantum channel", data)
+                            logger.info("Data received on quantum channel")
                             if data and QuantumChannel._handlers:
                                 QuantumChannel._handlers(data)
                             elif not QuantumChannel._handlers:
-                                print("No handler registered for incoming data.")
+                                logger.info("No handler registered for incoming data.")
                     except socket.timeout:
                         continue
 
@@ -80,7 +82,7 @@ class QuantumChannel:
             return pickle.loads(received_data)
 
         except (pickle.UnpicklingError, struct.error, ConnectionError) as e:
-            print(f"Error receiving data: {e}")
+            logger.info(f"Error receiving data: {e}")
             return None
 
     @staticmethod
@@ -91,4 +93,4 @@ class QuantumChannel:
             QuantumChannel.server_socket = None
         if QuantumChannel.listener_thread:
             QuantumChannel.listener_thread.join()
-        print("Listener stopped.")
+        logger.info("Listener stopped.")

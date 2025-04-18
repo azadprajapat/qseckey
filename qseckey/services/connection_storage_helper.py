@@ -1,5 +1,8 @@
 from ..services.storage.connection_storage import ConnectionStorage
 from ..services.key_storage_helper import KeyStorageHelper
+import logging
+logger = logging.getLogger(__name__)
+
 class ConnectionStorageHelper:
     _instance = None  
     def __new__(cls, *args, **kwargs):
@@ -15,7 +18,7 @@ class ConnectionStorageHelper:
     def store_connection(self, application_id, connection_data):
         existing_connection = self.retrieve_connection(application_id)
         if existing_connection:
-            print("Connection already exists")
+            logger.info("Connection already exists")
             return existing_connection
 
         connection_data['stored_key_count'] = 0
@@ -26,9 +29,9 @@ class ConnectionStorageHelper:
         if existing_connection:
             existing_connection[key] = value
             self.connectionStorage.store_connection(application_id, existing_connection)
-            print(f"Connection {application_id} updated successfully")
+            logger.info(f"Connection {application_id} updated successfully")
             return existing_connection
-        print(f"No connection found for ID {application_id}")
+        logger.info(f"No connection found for ID {application_id}")
         return None
     
     def retrieve_connection(self, application_id):

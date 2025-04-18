@@ -10,7 +10,7 @@ import logging
 if __name__ == "__main__":
     app = FastAPI(title=settings.PROJECT_NAME, version=settings.PROJECT_VERSION)
     app.include_router(router)
-    uvicorn.run(app, host=settings.HOST, port=settings.PORT)
     logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
+    uvicorn.run(app, host=settings.HOST, port=settings.PORT)

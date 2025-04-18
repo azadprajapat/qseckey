@@ -3,7 +3,7 @@ version: "3.9"
 services:
   sender:
     build: .
-    container_name: sender_app
+    container_name: sender_node
     environment:
       - ROLE=SENDER
     ports:
@@ -15,7 +15,7 @@ services:
 
   receiver:
     build: .
-    container_name: receiver_app
+    container_name: receiver_node
     environment:
       - ROLE=RECEIVER
     ports:

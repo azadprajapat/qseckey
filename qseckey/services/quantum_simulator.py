@@ -1,9 +1,11 @@
 import time
+import logging
 from ..utils.config import settings
 from qiskit import transpile
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import Aer
+logger = logging.getLogger(__name__)
 
 class QuantumSimulator:
     _instance = None
@@ -21,10 +23,10 @@ class QuantumSimulator:
 
     def _initialize_backend(self):
         if settings.USE_SIMULATOR:
-            print("Setting up local simulator backend...")
+            logger.info("Setting up local simulator backend...")
             self.backend = Aer.get_backend('qasm_simulator')
         else:
-            print("Setting up IBM Quantum backend...")
+            logger.info("Setting up IBM Quantum backend...")
             QiskitRuntimeService.save_account(
                 channel='ibm_quantum',
                 token=settings.IBM_TOKEN,
@@ -32,13 +34,21 @@ class QuantumSimulator:
             )
             service = QiskitRuntimeService()
             self.backend = service.backend('ibm_kyiv')
-            print("IBM backend setup complete.")
+            logger.info("IBM backend setup complete.")
 
     def execute_job(self, qc):
+        start_time = time.time()
+        result = None
         if settings.USE_SIMULATOR:
-            return self._execute_simulator(qc)
+            result = self._execute_simulator(qc)
         else:
-            return self._execute_ibm(qc)
+            result = self._execute_ibm(qc)
+        
+        end_time = time.time()
+
+        elapsed_time = (end_time - start_time)
+        logger.info(f"Circuit Execution took {elapsed_time:.2f} seconds.")
+        return result    
 
     def _execute_simulator(self, qc):
         transpiled_qc = transpile(qc.reverse_bits(), self.backend)
@@ -52,10 +62,10 @@ class QuantumSimulator:
 
         sampler = Sampler(mode=self.backend)
         sampler.options.default_shots = 10000
-        print("Running the circuit on the IBM backend...")
+        logger.info("Running the circuit on the IBM backend...")
         job = sampler.run([isa_circuit])
-        print(f"Job ID: {job.job_id()}")
+        logger.info(f"Job ID: {job.job_id()}")
         pub_result = job.result()[0]
-        print(pub_result.data)
+        logger.info(pub_result.data)
         counts = pub_result.data.c.get_counts()
         return counts

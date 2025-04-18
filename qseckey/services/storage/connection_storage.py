@@ -1,5 +1,7 @@
 import threading
 from typing import Any, Dict, List, Optional
+import logging
+logger = logging.getLogger(__name__)
 
 class ConnectionStorage:
     _instance = None
@@ -16,7 +18,7 @@ class ConnectionStorage:
     def create(self, application_id: str, details: Dict[str, Any]) -> None:
         with self._storage_lock:
             self._storage[application_id] = details
-            print(f"Connection {application_id} created successfully")
+            logger.info(f"Connection {application_id} created successfully")
             return details
 
     def read(self, application_id: Optional[str] = None) -> Optional[Any]:

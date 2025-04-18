@@ -1,4 +1,6 @@
 import requests
+import logging
+logger = logging.getLogger(__name__)
 
 class RequestSender:
     def __init__(self, base_url):
@@ -13,7 +15,7 @@ class RequestSender:
             response.raise_for_status()
             return response  # Return JSON response
         except requests.exceptions.RequestException as e:
-            print (e)
+            logger.info (e)
             return None
 
     def post(self, endpoint, data=None, json=None, headers=None):
@@ -24,5 +26,5 @@ class RequestSender:
             response.raise_for_status()
             return response 
         except requests.exceptions.RequestException as e:
-            print(e)
+            logger.info(e)
             return None

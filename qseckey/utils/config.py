@@ -12,7 +12,7 @@ class Settings:
     QUANTUM_LISTNER = 4081
     ERROR_THRESHOLD = 0.03
     DEBUG = True
-    KEY_GENERATION_CAPACITY = 100
+    KEY_GENERATION_CAPACITY = 1
     USE_SIMULATOR = True
 
 settings = Settings()

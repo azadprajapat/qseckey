@@ -8,6 +8,8 @@ from ....services.quantum_simulator import QuantumSimulator
 from ....channels.public_channel import PublicChannel
 from ....channels.quantum_channel import QuantumChannel
 from ....utils.payload_generate import PayloadGenerator
+import logging
+logger = logging.getLogger(__name__)
 
 class Sender:
     _instances = {}
@@ -15,7 +17,7 @@ class Sender:
     def __new__(cls, key_id, application_id, key_size, quantum_link_info, public_channel_info,manager_callback):
         if key_id not in cls._instances:
             if key_size is None:
-                print(f"Key size is not provided for {key_id}, {application_id}")
+                logger.info(f"Key size is not provided for {key_id}, {application_id}")
             cls._instances[key_id] = super(Sender, cls).__new__(cls)
             cls._instances[key_id].__init__(key_id, application_id, key_size, quantum_link_info, public_channel_info,manager_callback)
         return cls._instances[key_id]
@@ -44,7 +46,7 @@ class Sender:
 
     def prepare_qubits(self): 
         qc = QuantumCircuit(self.qubits_requested, self.qubits_requested)  # Create a circuit with 'key_size' qubits
-        print("starting the protocol with bits",self.bits)
+        logger.info(f"starting the BB84 protocol with bits {self.bits}")
         for i in range(self.qubits_requested):
             if self.bits[i] == 1:
                 qc.x(i)  # Apply X (bit-flip) gate if the bit is 1
@@ -70,24 +72,26 @@ class Sender:
             if(res):
                 matched_bits = [self.bits[i] for i in range(self.qubits_requested) if self.primary_bases[i] == self.secondary_bases[i]]
                 if len(matched_bits) < self.qubits_requested/2:
-                    print(f"Half of the bases do not match. Discarding transaction.")
+                    logger.info(f"Half of the bases do not match. Discarding transaction....")
+                    self.manager_callback(self.key_id,None,self.application_id)
                     self.state=BB84Utils.QuantumProtocolStatus.COMPLETED
                     return  # Discard transaction
             self.matching_bits = matched_bits
-            print("matching bits on sender end:",self.matching_bits)
+            logger.info(f"matching bits on sender end: {self.matching_bits}")
             res = PublicChannel.send(self.public_channel_info['target'], PayloadGenerator.error_correction_bits("SENDER", self.key_id,BB84Utils.DataEvents.ERROR_BITS,self.matching_bits[-int(self.qubits_requested / 4):]))
     
         if self.state == BB84Utils.QuantumProtocolStatus.ERROR_CORRECTION:
-            print("Error correction started")
+            logger.info("Error correction started")
             qber = BB84Utils.calculate_error_rate(self.matching_bits[-int(self.qubits_requested / 4):], self.reveal_bits)
-            print(f"QBER: {qber}")
+            logger.info(f"QBER: {qber}")
             if qber > settings.ERROR_THRESHOLD:
-                print(f"QBER too high. Discarding transaction.")
+                logger.info(f"QBER too high. Discarding transaction.")
+                self.manager_callback(self.key_id,None,self.application_id)
                 self.state=BB84Utils.QuantumProtocolStatus.COMPLETED
                 return
             final_key = self.matching_bits[:int(self.qubits_requested / 4)]    
             final_key_str =''.join(map(str, final_key))
-            print("final key in Sender",final_key_str)
+            logger.info(f"final key in Sender {final_key_str}")
             self.manager_callback(self.key_id,final_key_str,self.application_id)
             self.state = BB84Utils.QuantumProtocolStatus.COMPLETED
     

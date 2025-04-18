@@ -1,14 +1,17 @@
 from ....controllers.qkd.bb84.bb84_key_generator import BB84KeyGenerator
+import logging
+logger = logging.getLogger(__name__)
+
 class BB84CommunicationHandler:
     def __init__(self, completion_callback):
         self.completion_callback = completion_callback
     def handle_quantum_channel_data(self,data):
         if data.get('event') == 'TEST':
-            print("[Quantum Channel] Test event received")
+            logger.info("[Quantum Channel] Test event received")
             return
 
         if data.get('source_type') != "SENDER":
-            print("[Quantum Channel] Invalid source type")
+            logger.info("[Quantum Channel] Invalid source type")
             return
 
         generator = BB84KeyGenerator(data['key_id'])

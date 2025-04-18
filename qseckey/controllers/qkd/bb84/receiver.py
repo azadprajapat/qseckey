@@ -8,6 +8,8 @@ from ....services.quantum_simulator import QuantumSimulator
 from ....channels.public_channel import PublicChannel
 from ....channels.quantum_channel import QuantumChannel
 from ....utils.payload_generate import PayloadGenerator
+import logging
+logger = logging.getLogger(__name__)
 
 
 class Receiver:
@@ -16,7 +18,7 @@ class Receiver:
 
     def __new__(cls, key_id, key_size, public_channel_info,completion_callback=None):
         if key_id not in cls._instances:
-            print(f"Creating new Receiver instance as it's a new connection with key_id {key_id}")
+            logger.info(f"Creating new Receiver instance as it's a new connection with key_id {key_id}")
             # Create a new instance if not already present
             cls._instances[key_id] = super(Receiver, cls).__new__(cls)
             cls._instances[key_id].__init__(key_id, key_size, public_channel_info,completion_callback)
@@ -37,7 +39,6 @@ class Receiver:
         self.primary_bases = np.random.randint(2, size=self.qubits_requested)
         self.secondary_bases = None
         self.public_channel_info = public_channel_info
-        print("receiver intializatio state",self.initialized, " callback provided",completion_callback)
         self.completion_callback = completion_callback
         self.initialized = True
 
@@ -54,19 +55,19 @@ class Receiver:
 
         qc.measure(range(num_qubits), range(num_qubits))
 
-        print("Max qubits supported: ",settings.NUM_QUBITS)
-        print("Qubits provided", num_qubits)
+        logger.info(f"Max qubits supported on the system: {settings.NUM_QUBITS} ")
+        logger.info(f"Qubits required for key generation {num_qubits}")
         simulator  = QuantumSimulator()
         counts = simulator.execute_job(qc)  
         best_outcome = max(counts, key=counts.get)  
         max_frequency = counts[best_outcome]  
         max_count = sum(1 for freq in counts.values() if freq == max_frequency)
 
-        print("Best outcome:", best_outcome)
-        print("Max frequency:", max_frequency)
-        print("Number of outcomes with max frequency:", max_count)
+        logger.info(f"Best outcome: {best_outcome}")
+        logger.info(f"Max frequency: {max_frequency}")
+        logger.info(f"Number of outcomes with max frequency: {max_count} ")
         best_outcome = np.array([int(bit) for bit in best_outcome],dtype=int)
-        print("measurement on the quantum simulator completed successfully",best_outcome)
+        logger.info(f"measurement on the quantum simulator completed successfully:{best_outcome}",)
 
         return best_outcome  # Return the most likely measurement outcome
 
@@ -79,24 +80,24 @@ class Receiver:
         if self.state == BB84Utils.QuantumProtocolStatus.BASES_RECEIVED:
             matched_bits = [self.key_data[i] for i in range(self.qubits_requested) if self.primary_bases[i] == self.secondary_bases[i]]
             if len(matched_bits) < self.qubits_requested/2:
-                print(f"Half of the bases do not match. Discarding transaction.")
+                logger.info(f"Half of the bases do not match. Discarding transaction.")
                 self.state=BB84Utils.QuantumProtocolStatus.COMPLETED
                 return  # Discard transaction
             self.matching_bits = matched_bits
-            print("matching bits on receiver end:",self.matching_bits)
+            logger.info(f"matching bits on receiver end: {self.matching_bits}")
             res = PublicChannel.send(self.public_channel_info['source'], PayloadGenerator.error_correction_bits("RECEIVER", self.key_id,BB84Utils.DataEvents.ERROR_BITS,self.matching_bits[-int(self.qubits_requested / 4):]))
 
         if self.state == BB84Utils.QuantumProtocolStatus.ERROR_CORRECTION:
-            print("Error correction started")
+            logger.info("Error correction started")
             qber = BB84Utils.calculate_error_rate(self.matching_bits[-int(self.qubits_requested / 4):], self.reveal_bits)
-            print(f"QBER: {qber}")
+            logger.info(f"QBER: {qber}")
             if qber > settings.ERROR_THRESHOLD:
-                print(f"QBER too high. Discarding transaction.")
+                logger.info(f"QBER too high. Discarding transaction.")
                 self.state=BB84Utils.QuantumProtocolStatus.COMPLETED
                 return  
             final_key = self.matching_bits[:int(self.qubits_requested / 4)]           
             final_key_str =''.join(map(str, final_key))
-            print("final key in Receiver",final_key_str)
+            logger.info(f"final key in Receiver: {final_key_str}")
             self.completion_callback(self.key_id,final_key_str)
             self.state = BB84Utils.QuantumProtocolStatus.COMPLETED
 

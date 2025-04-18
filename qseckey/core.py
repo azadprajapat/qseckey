@@ -2,12 +2,16 @@
 
 from .utils.config import settings
 from .controllers.key_manager import KeyManager
+import logging
+logger = logging.getLogger(__name__)
 
 key_manager = None
 
 def initialize(config: dict = None):
     global key_manager
-
+    logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
     if config:
         for k, v in config.items():
             if hasattr(settings, k):
