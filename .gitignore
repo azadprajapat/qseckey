@@ -1,1 +1,20 @@
 **/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+.venv/
+__pycache__/
+
+# VS Code settings folder
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+.venv/
+__pycache__/
+
+
+# build
+build/
