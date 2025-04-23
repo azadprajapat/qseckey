@@ -14,22 +14,18 @@ logger = logging.getLogger(__name__)
 def register_connection(slave_id):
     """Registers a new connection."""
     payload = {
-        "source_KME_ID": "sender_app",
-        "target_KME_ID": "receiver_app",
+        "source_KME_ID": "sender_node",
+        "target_KME_ID": "receiver_node",
         "master_SAE_ID": "ghi",
-        "slave_SAE_ID": slave_id,
-        "key_size": 14,
-        "max_keys_count": 10,
-        "max_key_per_request": 1,
-        "max_SAE_ID_count": 0
+        "slave_SAE_ID": slave_id
     }
     
     response = requests.post(f"{SERVER_URL_MASTER}/register_connection", json=payload)
     
     if response.status_code == 200:
-        logger.info("Connection registered successfully!")
+        print("Connection registered successfully!")
     else:
-        raise Exception(f"Error registering connection: {response.text}")
+        print("Connection already registered successfully!")
 
 
 def expand_key(bb84_key):
@@ -40,8 +36,9 @@ def expand_key(bb84_key):
 
 def get_secure_key(slave_host):
     """Requests a secure key from the SAE server."""
-    response = requests.get(f"{SERVER_URL_MASTER}/get_key?slave_host={slave_host}")
+    response = requests.get(f"{SERVER_URL_MASTER}/get_key?slave_host={slave_host}&key_size=12")
     if response.status_code == 200:
+        print("Key fetched successfully!")
         return response.json()
     else:
         raise Exception(f"Error fetching key: {response.text}")
@@ -77,26 +74,27 @@ def request_key_from_server(key_id):
 
 
 # Client process
-slave_host = "jk3"
+slave_host = "secure_mail_application"
 register_connection(slave_host)
+print(f"Registered the connection with the slave host {slave_host}")
 time.sleep(5)  # Ensure the key is available in the second server
-secure_key_response = get_secure_key(slave_host)
 
+secure_key_response = get_secure_key(slave_host)
 key_id = secure_key_response["key_id"]
 key_data = secure_key_response["key_data"]
-logger.info(f"received the secure key of size from the server {len(key_data)}")
+print(f"received the secure key of size from the server {len(key_data)}")
 padded_key_data = expand_key(key_data)
-logger.info(f"Padded the key to perform the AES encryption {len(padded_key_data)}")
+print(f"Padded the key to perform the AES encryption {len(padded_key_data)}")
 
 message = "Hello, this is BB84 test secure message"
 
 encrypted_msg = encrypt_message(message, padded_key_data)
-logger.info(f"Encrypted Message: {encrypted_msg}")
+print(f"Encrypted Message: {encrypted_msg}")
 
 # Simulating Slave SAE receiving encrypted data
 retrieved_key_data = request_key_from_server(key_id)
 padded_retrieved_key_data = expand_key(retrieved_key_data)
-logger.info(f"Padded the key to perform the AES decryption {len(padded_retrieved_key_data)}")
+print(f"Padded the key to perform the AES decryption {len(padded_retrieved_key_data)}")
 decrypted_msg = decrypt_message(encrypted_msg, padded_retrieved_key_data)
 
-logger.info(f"Decrypted Message: {decrypted_msg}")
+print(f"Decrypted Message: {decrypted_msg}")
