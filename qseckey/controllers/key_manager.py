@@ -63,6 +63,7 @@ class KeyManager:
         return self.key_storage_helper.retrieve_key_from_storage(key_id, application_id)
 
     def __merge_and_transmit_keys(self, key_id, conn, application_id, key_size):
+        start_time = time.time()
         count = key_size // conn['key_size']
         if count > conn['stored_key_count']:
             return "Not enough keys available for the requested size"
@@ -75,6 +76,9 @@ class KeyManager:
             final_key += key['key_data']
 
         res = self._httpSender(conn).post("/generate_merged_key", json={"key_id": final_key_id, "key_ids_payload": key_ids})
+        end_time = time.time()
+        elapsed_time = (end_time - start_time)
+        logger.info(f"Key merging and reconciliation with receiver completed in {elapsed_time:.2f} seconds.")
         return {'key_id': final_key_id, 'key_data': final_key} if res.status_code == 200 else "Failed to generate key"
 
     def prepare_key_receiver(self, key_id, key_ids_payload):

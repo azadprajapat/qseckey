@@ -27,15 +27,24 @@ class QuantumSimulator:
             self.backend = Aer.get_backend('qasm_simulator')
         else:
             logger.info("Setting up IBM Quantum backend...")
-            QiskitRuntimeService.save_account(
-                channel='ibm_quantum',
-                token=settings.IBM_TOKEN,
-                overwrite=True
-            )
-            service = QiskitRuntimeService()
-            self.backend = service.backend('ibm_kyiv')
-            logger.info("IBM backend setup complete.")
+            try:
+                QiskitRuntimeService.save_account(
+                    channel='ibm_quantum',
+                    token=settings.IBM_TOKEN,
+                    overwrite=True
+                )
+                service = QiskitRuntimeService()
+                available_backends = service.backends()
+                logger.info("Available IBM Quantum Backends:")
+                for backend in available_backends:
+                    logger.info(f"- {backend.name}")
 
+                self.backend = service.backend('ibm_sherbrooke')
+                logger.info(f"Using IBM backend: {self.backend.name}")
+            except Exception as e:
+                logger.error(f"Error initializing IBM backend: {e}")
+                self.backend = None  
+            logger.info("IBM backend setup complete.")
     def execute_job(self, qc):
         start_time = time.time()
         result = None
