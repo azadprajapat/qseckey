@@ -3,7 +3,7 @@
 *.pyo
 *.pyd
 *.pdb
-*.egg-info/
+*.egg-info/*
 .venv/
 __pycache__/
 
@@ -18,3 +18,4 @@ __pycache__/
 
 # build
 build/
+dist/
