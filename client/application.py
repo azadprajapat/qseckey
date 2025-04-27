@@ -36,7 +36,7 @@ def expand_key(bb84_key):
 
 def get_secure_key(slave_host):
     """Requests a secure key from the SAE server."""
-    response = requests.get(f"{SERVER_URL_MASTER}/get_key?slave_host={slave_host}&key_size=12")
+    response = requests.get(f"{SERVER_URL_MASTER}/get_key?slave_host={slave_host}&key_size=128")
     if response.status_code == 200:
         print("Key fetched successfully!")
         return response.json()
@@ -84,7 +84,7 @@ key_id = secure_key_response["key_id"]
 key_data = secure_key_response["key_data"]
 print(f"received the secure key of size from the server {len(key_data)}")
 padded_key_data = expand_key(key_data)
-print(f"Padded the key to perform the AES encryption {len(padded_key_data)}")
+
 
 message = "Hello, this is BB84 test secure message"
 
@@ -94,7 +94,6 @@ print(f"Encrypted Message: {encrypted_msg}")
 # Simulating Slave SAE receiving encrypted data
 retrieved_key_data = request_key_from_server(key_id)
 padded_retrieved_key_data = expand_key(retrieved_key_data)
-print(f"Padded the key to perform the AES decryption {len(padded_retrieved_key_data)}")
 decrypted_msg = decrypt_message(encrypted_msg, padded_retrieved_key_data)
 
 print(f"Decrypted Message: {decrypted_msg}")
