@@ -69,10 +69,9 @@ class QuantumManager:
             self.key_generation_capacity += 1
             start_time = self.start_times.pop(key_id, None)
 
-        logger.info(f"QuantumManager: Key Generation Completed for key_id={key_id}")
-        end_time = time.time()
-
         if key_data:
+            logger.info(f"QuantumManager: Key Generation Completed for key_id={key_id}")
+            end_time = time.time()
             if start_time:
                 elapsed_time = end_time - start_time
                 logger.info(f"Key generation took {elapsed_time:.2f} seconds for key_id={key_id}")
