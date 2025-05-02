@@ -67,7 +67,7 @@ class QuantumSimulator:
 
     def _execute_ibm(self, qc):
         pm = generate_preset_pass_manager(backend=self.backend)
-        isa_circuit = pm.run(qc.reverse_bits())
+        isa_circuit = pm.run(qc)
 
         sampler = Sampler(mode=self.backend)
         sampler.options.default_shots = 10000
@@ -77,4 +77,5 @@ class QuantumSimulator:
         pub_result = job.result()[0]
         logger.info(pub_result.data)
         counts = pub_result.data.c.get_counts()
+        counts= {"".join(reversed(key)): value for key, value in counts.items()}
         return counts
