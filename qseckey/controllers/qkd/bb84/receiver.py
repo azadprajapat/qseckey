@@ -53,7 +53,7 @@ class Receiver:
             if bases[i] == 1:
                 qc.h(i)  # Apply Hadamard before measuring in the X-bases
 
-        qc.measure(range(num_qubits), range(num_qubits))
+        qc.measure_all()
 
         logger.info(f"Max qubits supported on the system: {settings.NUM_QUBITS} ")
         logger.info(f"Qubits required for key generation {num_qubits}")
